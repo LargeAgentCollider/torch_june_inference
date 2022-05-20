@@ -16,6 +16,10 @@ jobs:
         python-version: [3.9]
 
     steps:
+    - name: setup ssh agent
+      uses: webfactory/ssh-agent@v0.5.4
+      with:
+        ssh-private-key: ${{ secrets.TORCH_JUNE_SSH_KEY}}
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
@@ -32,8 +36,6 @@ jobs:
 
     - name: Install torch_june
       run: |
-        eval 'ssh-agent -s'
-        ssh-add - <<< '${{ secrets.TORCH_JUNE_SSH_KEY}}'
         pip install git+ssh://git@github.com/arnauqb/torch_june.git
 
     - name: Install package
