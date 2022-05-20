@@ -28,7 +28,7 @@ jobs:
 
     - name: Build multinest
       run: |
-        sudo apt install -y libblas{3,-dev} liblapack{3,-dev} libatlas-basea-dev cmake build-essential git gfortran
+        sudo apt install -y libblas{3,-dev} liblapack{3,-dev} libatlas-base-dev cmake build-essential git gfortran
         git clone https://github.com/JohannesBuchner/MultiNest.git
         cd MultiNest/build
         cmake .. && make
