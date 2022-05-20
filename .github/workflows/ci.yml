@@ -33,7 +33,13 @@ jobs:
         cd MultiNest/build
         cmake .. && make
         export LD_LIBRARY_PATH=/home/runner/work/torch_june_inference/torch_june_inference/MultiNest/lib
+        echo '::set-env name=LD_LIBRARY_PATH::../lib'
         cd -
+
+    - name: Test multinest
+      run: |
+        pip install pymultinest
+        python -c "import pymultinest"
 
     - name: Install requirements
       run: |
