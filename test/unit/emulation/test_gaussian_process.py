@@ -18,7 +18,7 @@ class TestGPEmulation:
         return GPEmulator(train_x=xs, train_y=ys)
 
     def test__emulation(self, data, emulator):
-        emulator.train_emulator(max_training_iter=1000)
+        emulator.train_emulator(max_training_iter=10)
         emulator.set_eval()
         xs, ys = data
         # test inputs

@@ -53,6 +53,7 @@ class GPEmulator(gpytorch.models.ExactGP):
                     previous_loss = loss
                 else:
                     break
+
     def set_eval(self):
         self.eval()
         self.likelihood.eval()
