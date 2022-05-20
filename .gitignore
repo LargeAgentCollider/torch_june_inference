@@ -127,3 +127,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# my ignores
+notebooks
+test/unit/multinest_test_results
+test/unit/fortran_test.txt
