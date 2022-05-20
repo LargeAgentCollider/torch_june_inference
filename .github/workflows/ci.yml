@@ -32,6 +32,7 @@ jobs:
         git clone https://github.com/JohannesBuchner/MultiNest.git
         cd MultiNest/build
         cmake .. && make
+        pwd
         export LD_LIBRARY_PATH=../lib/:$LD_LIBRARY_PATH
         echo $LD_LIBRARY_PATH
         ls ../lib
