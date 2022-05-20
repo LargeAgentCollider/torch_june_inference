@@ -39,11 +39,6 @@ jobs:
         #echo '::set-env name=LD_LIBRARY_PATH::../lib'
         cd -
 
-    - name: Test multinest
-      run: |
-        pip install pymultinest
-        python -c "import pymultinest"
-
     - name: Install requirements
       run: |
         python -m pip install --upgrade pip
