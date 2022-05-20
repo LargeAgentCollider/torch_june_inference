@@ -32,10 +32,7 @@ jobs:
         git clone https://github.com/JohannesBuchner/MultiNest.git
         cd MultiNest/build
         cmake .. && make
-        pwd
-        export LD_LIBRARY_PATH=../lib/:$LD_LIBRARY_PATH
-        echo $LD_LIBRARY_PATH
-        ls ../lib
+        export LD_LIBRARY_PATH=/home/runner/work/torch_june_inference/torch_june_inference/MultiNest/lib
         cd -
 
     - name: Install requirements
