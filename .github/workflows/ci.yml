@@ -30,6 +30,12 @@ jobs:
       run: |
         pip install torch-scatter torch-sparse torch-cluster torch-geometric -f https://data.pyg.org/whl/torch-1.11.0+cpu.html
 
+    - name: Install torch_june
+      run: |
+        eval 'ssh-agent -s'
+        ssh-add - <<< '${{ secrets.TORCH_JUNE_SSH_KEY}}'
+        pip install git+ssh://git@github.com/arnauqb/torch_june.git
+
     - name: Install package
       run: python setup.py install
 
