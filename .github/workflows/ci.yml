@@ -25,7 +25,7 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
+    - name: Install requirements
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
@@ -37,6 +37,15 @@ jobs:
     - name: Install torch_june
       run: |
         pip install git+ssh://git@github.com/arnauqb/torch_june.git
+
+    - name: Build multinest
+      run: |
+        sudo apt install -y libblas{3,-dev} liblapack{3,-dev} libatlas{3-base,-dev} cmake build-essential git gfortran
+        git clone https://github.com/JohannesBuchner/MultiNest.git
+        cd MultiNest/build
+        cmake .. && make
+        sudo make install
+        cd -
 
     - name: Install package
       run: python setup.py install

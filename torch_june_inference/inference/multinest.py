@@ -6,7 +6,9 @@ from torch_june_inference.utils import read_fortran_data_file
 
 
 class MultiNest:
-    def __init__(self, model, prior, loglike, ndim, output_path="./multinest"):
+    def __init__(
+        self, model, prior, loglike, ndim, output_path="./multinest"
+    ):
         self.model = model
         self.prior = prior
         self.loglike = loglike
