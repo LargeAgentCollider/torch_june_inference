@@ -3,12 +3,14 @@ import pymultinest
 import numpy as np
 
 from torch_june_inference.utils import read_fortran_data_file
+from torch_june_inference.inference.base import InferenceEngine
 
 
-class MultiNest:
+class MultiNest(InferenceEngine):
     def __init__(
         self, model, prior, loglike, ndim, output_path="./multinest"
     ):
+        super().__init__()
         self.model = model
         self.prior = prior
         self.loglike = loglike
