@@ -24,9 +24,9 @@ class MultiNest(InferenceEngine):
         """
         TODO: Need to invert from unit cube for other distros.
         """
-        #for i in range(ndim):
+        # for i in range(ndim):
         #    cube[i] = cube[i] - 1.0
-        #return cube
+        # return cube
         return cube - 1.0
 
     def _loglike(self, cube):
@@ -41,6 +41,9 @@ class MultiNest(InferenceEngine):
             # Compare to data
             y = self.runner.results[self.data_observable][self.time_stamps] / n_agents
             y_obs = self.observed_data[self.time_stamps] / n_agents
+            print(f"y {y}")
+            print(f"y_obs {y_obs}")
+            print("---")
             return self.likelihood(y).log_prob(y_obs).sum().cpu().item()
 
     def run(self, **kwargs):
@@ -53,9 +56,9 @@ class MultiNest(InferenceEngine):
             verbose=True,
             n_iter_before_update=1,
             resume=False,
-            **kwargs
+            **kwargs,
         )
-        #pymultinest.run(
+        # pymultinest.run(
         #   self._loglike,
         #   self._prior,
         #   ndims,
@@ -64,7 +67,7 @@ class MultiNest(InferenceEngine):
         #   resume=False,
         #   n_iter_before_update=1,
         #   **kwargs
-        #)
+        # )
         self.results = self.save_results()
 
     def save_results(self):

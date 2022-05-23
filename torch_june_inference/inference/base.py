@@ -7,6 +7,8 @@ import pyro.distributions as dist
 
 from torch_june import Runner
 
+def fstr(template):
+    return eval(f"f'{template}'")
 
 class InferenceEngine(ABC):
     def __init__(
@@ -28,7 +30,7 @@ class InferenceEngine(ABC):
         self.time_stamps = time_stamps
         self.data_observable = data_observable
         self.results_path = self._read_path(results_path)
-        self.device = device
+        self.device = fstr(device)
 
     @classmethod
     def from_file(cls, fpath):

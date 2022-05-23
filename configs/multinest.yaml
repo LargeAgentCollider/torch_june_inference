@@ -24,9 +24,9 @@ parameters_to_fit:
 
 data:
   observable: cases_per_timestep
-  time_stamps: [10, 30, 60, 90]
-  observed_data: "/Users/arnull/code/torch_june_inference/data/example.csv"
+  time_stamps: [90]
+  observed_data: "/Users/arnull/code/torch_june_inference/example/results.csv"
 
 likelihood:
   distribution: Normal
-  error: 0.05
+  error: 0.005
