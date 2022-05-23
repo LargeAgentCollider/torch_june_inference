@@ -25,9 +25,6 @@ class TestMultiNest:
         )
         return x, y
 
-    def prior(self, cube, ndim, nparams):
-        cube[0] = cube[0] * 4
-
     def loglike(self, y, y_obs):
         loglikelihood = (
             torch.distributions.Normal(

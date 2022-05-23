@@ -1,49 +1,63 @@
 from pathlib import Path
 import pymultinest
+import yaml
+import torch
 import numpy as np
+import pandas as pd
+from scipy import stats
 
+from torch_june import TorchJune
 from torch_june_inference.utils import read_fortran_data_file
 from torch_june_inference.inference.base import InferenceEngine
+from torch_june_inference.paths import config_path
 
 
 class MultiNest(InferenceEngine):
-    def __init__(
-        self, model, prior, loglike, ndim, output_path="./multinest"
-    ):
-        super().__init__()
-        self.model = model
-        self.prior = prior
-        self.loglike = loglike
-        self.ndim = ndim
-        self.output_path = self._read_path(output_path)
-        self.samples_weights = None
-        self.likelihood_values = None
-        self.samples = None
+    @classmethod
+    def from_file(cls, fpath=config_path / "multinest.yaml"):
+        with open(fpath, "r") as f:
+            params = yaml.safe_load(f)
+        return cls.from_parameters(params)
 
-    def _read_path(self, output_path):
-        output_path = Path(output_path)
-        output_path.mkdir(exist_ok=True, parents=True)
-        output_path = output_path / "multinest"
-        return output_path.as_posix()
+    def _prior(self, cube, ndim, nparams):
+        """
+        TODO: Need to invert from unit cube for other distros.
+        """
+        for i in range(ndim):
+            cube[i] = cube[i] * 1.5 - 1
 
-    def run(self, x_obs, y_obs, **kwargs):
-        def _loglike(cube, ndim, nparams):
-            y = self.model(param=cube, x=x_obs)
-            return self.loglike(y=y, y_obs=y_obs)
+    def _loglike(self, cube, ndim, nparams):
+        # Set model parameters
+        with torch.no_grad():
+            state_dict = self.runner.model.state_dict()
+            for i, key in enumerate(self.priors):
+                state_dict[key].copy_(torch.tensor(cube[i]))
+            # Run model
+            self.runner.run()
+        # Compare to data
+        y = self.runner.results[self.data_observable][self.time_stamps]
+        y_obs = self.observed_data[self.time_stamps]
+        return self.likelihood(y).log_prob(y_obs).sum().cpu().item()
 
+    def run(self, **kwargs):
+        ndim = len(self.priors)
         pymultinest.run(
-            _loglike,
-            self.prior,
-            self.ndim,
-            outputfiles_basename=self.output_path,
+            self._loglike,
+            self._prior,
+            ndim,
+            outputfiles_basename=(self.results_path / "multinest").as_posix(),
+            verbose=True,
+            resume=False,
             **kwargs
         )
-        results = self.read_results(self.output_path)
-        self.samples_weights = results[:, 0]
-        self.likelihood_values = results[:, 1]
-        self.samples = results[:, 2:]
+        self.results = self.save_results()
 
-    @staticmethod
-    def read_results(fpath):
-        results = read_fortran_data_file(fpath + ".txt")
-        return results
+    def save_results(self):
+        results = read_fortran_data_file(self.results_path / "multinest.txt")
+        df = pd.DataFrame()
+        df["likelihood"] = results[:,1]
+        for i, name in enumerate(self.priors):
+            df[name] = results[:,2+i]
+        df["weights"] = results[:,0]
+        df.to_csv(self.results_path / "results.csv")
+        return df

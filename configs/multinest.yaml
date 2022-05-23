@@ -1,28 +1,31 @@
 title: MultiNest example configuration file.
 
-june_configuration_file: "/Users/arnull/code/torch_june_inference/confis/june_config.yaml"
+june_configuration_file: "/Users/arnull/code/torch_june_inference/configs/june_config.yaml"
 
 results_path: "./test_multinest"
 
 parameters_to_fit:
-  log_beta_household:
+  infection_passing.log_beta_household:
     prior:
       dist: Uniform
-      low: -1.0
-      high: 0.0
-  log_beta_company:
+      low: -0.5
+      high: 0.5
+  infection_passing.log_beta_company:
     prior:
       dist: Uniform
-      low: -1.0
-      high: 0.0
-  log_beta_school:
+      low: -0.5
+      high: 0.5
+  infection_passing.log_beta_school:
     prior:
       dist: Uniform
-      low: -1.0
-      high: 0.0
+      low: -0.5
+      high: 0.5
+
+data:
+  observable: cases_per_timestep
+  time_stamps: [10, 30, 60, 90]
+  observed_data: "/Users/arnull/code/torch_june_inference/data/example.csv"
 
 likelihood:
-  observable: normalized_cases
-  time_stamps: [10, 30, 60, 90]
-  dist: Normal
+  distribution: Normal
   error: 0.05
