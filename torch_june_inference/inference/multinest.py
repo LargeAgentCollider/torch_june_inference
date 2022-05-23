@@ -13,15 +13,34 @@ from torch_june_inference.inference.base import InferenceEngine
 from torch_june_inference.paths import config_path
 
 
+def read_pyro_to_scipy(dist, **kwargs):
+    if dist == "Uniform":
+        return stats.uniform(
+            loc=kwargs["low"], scale=kwargs["high"] - kwargs["low"]
+        )
+    elif dist == "Normal":
+        return stats.norm(loc=kwargs["mean"], scale=kwargs["std"])
+    else:
+        raise NotImplementedError
+
+
 class MultiNest(InferenceEngine):
+    @classmethod
+    def read_parameters_to_fit(cls, params):
+        parameters_to_fit = params["parameters_to_fit"]
+        ret = {}
+        for key in parameters_to_fit:
+            ret[key] = read_pyro_to_scipy(**parameters_to_fit[key]["prior"])
+        return ret
+
     def _prior(self, cube):
         """
         TODO: Need to invert from unit cube for other distros.
         """
-        # for i in range(ndim):
-        #    cube[i] = cube[i] - 1.0
-        # return cube
-        return cube - 0.5
+        params = cube.copy()
+        for i, key in enumerate(self.priors):
+            params[i] = self.priors[key].ppf(cube[i])
+        return params
 
     def _loglike(self, cube):
         # Set model parameters
@@ -39,6 +58,7 @@ class MultiNest(InferenceEngine):
 
     def run(self, **kwargs):
         ndims = len(self.priors)
+        print(ndims)
         result = solve(
             LogLikelihood=self._loglike,
             Prior=self._prior,

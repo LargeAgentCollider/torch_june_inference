@@ -11,20 +11,20 @@ parameters_to_fit:
       dist: Uniform
       low: -0.5
       high: 0.5
-  infection_passing.log_beta_company:
-    prior:
-      dist: Uniform
-      low: -0.5
-      high: 0.5
-  infection_passing.log_beta_school:
-    prior:
-      dist: Uniform
-      low: -0.5
-      high: 0.5
+        #infection_passing.log_beta_company:
+        #  prior:
+        #    dist: Uniform
+        #    low: -0.5
+        #    high: 0.5
+        #infection_passing.log_beta_school:
+        #  prior:
+        #    dist: Uniform
+        #    low: -0.5
+        #    high: 0.5
 
 data:
   observable: cases_per_timestep
-  time_stamps: [90]
+  time_stamps: [-1]
   observed_data: "/Users/arnull/code/torch_june_inference/example/results.csv"
 
 likelihood:
