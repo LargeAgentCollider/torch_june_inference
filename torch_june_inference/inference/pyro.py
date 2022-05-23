@@ -8,21 +8,16 @@ from torch_june_inference.inference.base import InferenceEngine
 class Pyro(InferenceEngine):
     def pyro_model(self, y_obs):
         self.runner.reset_model()
-        with torch.no_grad():
-            state_dict = self.runner.model.state_dict()
-            for i, key in enumerate(self.priors):
-                value = pyro.sample(key, self.priors[key]).to(self.device)
-                state_dict[key].copy_(value)
-        print("-----")
-        print(state_dict["infection_passing.log_beta_household"])
-        results = self.runner.run()
+        samples = {}
+        for key in self.priors:
+            value = pyro.sample(key, self.priors[key]).to(self.device)
+            samples[key] = value
+        y, model_error = self.evaluate(samples)
         # Compare to data
-        n_agents = self.runner.n_agents
-        # y = self.runner.results[self.data_observable][self.time_stamps] / n_agents
-        y = results[self.data_observable][self.time_stamps] / n_agents
-        y_obs = y_obs[self.time_stamps] / n_agents
-        print(f"y {y.item()}")
-        print(f"y_obs {y_obs.item()}")
+        y_obs = y_obs[self.time_stamps] / self.runner.n_agents
+        print("------")
+        print(y)
+        print(y_obs)
         pyro.sample(
             self.data_observable,
             self.likelihood(y),

@@ -1,11 +1,23 @@
 import torch
+import pandas as pd
+import yaml
+import pickle
 from tqdm import tqdm
 import numpy as np
 import gpytorch
 
+from torch_june.utils import read_device
+
 
 class GPEmulator(gpytorch.models.ExactGP):
-    def __init__(self, train_x, train_y, likelihood=None, device="cpu"):
+    def __init__(
+        self,
+        train_x,
+        train_y,
+        likelihood=None,
+        device="cpu",
+        save_path="./emulator.path",
+    ):
         n_tasks = train_y.shape[-1]
         if likelihood is None:
             likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(
@@ -21,6 +33,40 @@ class GPEmulator(gpytorch.models.ExactGP):
         )
         self.train_x = train_x
         self.train_y = train_y
+        self.save_path = save_path
+
+    @classmethod
+    def from_parameters(cls, params):
+        train_x, train_y = cls.load_samples(
+            params["samples_path"], time_stamps=params["time_stamps"]
+        )
+        device = params["device"]
+        return cls(
+            train_x=train_x,
+            train_y=train_y,
+            device=device,
+            save_path=params["save_path"],
+        )
+
+    @classmethod
+    def from_file(cls, fpath):
+        with open(fpath, "r") as f:
+            params = yaml.safe_load(f)
+        # reads mpi setup
+        params["device"] = read_device(params["device"])
+        return cls.from_parameters(params)
+
+    @classmethod
+    def load_samples(cls, fpath, time_stamps):
+        with open(fpath, "rb") as f:
+            samples = pickle.load(f)
+        train_x = samples["samples_x"].float()
+        train_y = samples["samples_y"][:, time_stamps].float()
+        return train_x, train_y
+
+    def restore_state(self, fpath):
+        state_dict = torch.load(fpath)
+        self.load_state_dict(state_dict)
 
     def forward(self, x):
         mean_x = self.mean_module(x)
@@ -58,5 +104,5 @@ class GPEmulator(gpytorch.models.ExactGP):
         self.eval()
         self.likelihood.eval()
 
-    def save(self, path):
-        torch.save(self.state_dict(), path)
+    def save(self):
+        torch.save(self.state_dict(), self.save_path)

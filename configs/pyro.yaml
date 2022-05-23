@@ -6,7 +6,9 @@ june_configuration_file: "/Users/arnull/code/torch_june_inference/configs/june_c
 results_path: "./pyro_tests"
 
 inference_configuration:
-  solver: NUTS
+  kernel:
+    type: NUTS
+    max_tree_depth: 5
   num_samples: 5000
   warmup_steps: 100
 
@@ -16,16 +18,11 @@ parameters_to_fit:
       dist: Normal
       loc: 0.0
       scale: 0.1
-        #infection_passing.log_beta_company:
-        #  prior:
-        #    dist: Uniform
-        #    low: -0.5
-        #    high: 0.5
-        #infection_passing.log_beta_school:
-        #  prior:
-        #    dist: Uniform
-        #    low: -0.5
-        #    high: 0.5
+
+emulator:
+  use_emulator: true
+  emulator_config_path: "./configs/emulator.yaml"
+  emulator_path: "./data/emulator.path"
 
 data:
   observable: cases_per_timestep
