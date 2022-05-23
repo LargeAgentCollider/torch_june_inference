@@ -20,22 +20,22 @@ class MultiNest(InferenceEngine):
             params = yaml.safe_load(f)
         return cls.from_parameters(params)
 
-    def _prior(self, cube, ndim, nparams):
+    def _prior(self, cube):
         """
         TODO: Need to invert from unit cube for other distros.
         """
-        for i in range(ndim):
-            cube[i] = cube[i] - 1.0
-        return cube
+        #for i in range(ndim):
+        #    cube[i] = cube[i] - 1.0
+        #return cube
+        return cube - 1.0
 
-    def _loglike(self, cube, ndim, nparams):
+    def _loglike(self, cube):
         # Set model parameters
         n_agents = self.runner.n_agents
         with torch.no_grad():
             state_dict = self.runner.model.state_dict()
             for i, key in enumerate(self.priors):
                 state_dict[key].copy_(torch.tensor(cube[i], device=self.device))
-            print(self.runner.model.state_dict())
             # Run model
             self.runner.run()
             # Compare to data
@@ -45,27 +45,26 @@ class MultiNest(InferenceEngine):
 
     def run(self, **kwargs):
         ndims = len(self.priors)
-        #result = solve(
-        #    LogLikelihood=self._loglike,
-        #    Prior=self._prior,
-        #    n_dims=ndims,
-        #    outputfiles_basename=(self.results_path / "multinest").as_posix(),
-        #    verbose=True,
-        #    n_iter_before_update=1,
-        #    resume=False,
-        #    **kwargs
-        #)
-
-        pymultinest.run(
-           self._loglike,
-           self._prior,
-           ndims,
-           outputfiles_basename=(self.results_path / "multinest").as_posix(),
-           verbose=True,
-           resume=False,
-           n_iter_before_update=1,
-           **kwargs
+        result = solve(
+            LogLikelihood=self._loglike,
+            Prior=self._prior,
+            n_dims=ndims,
+            outputfiles_basename=(self.results_path / "multinest").as_posix(),
+            verbose=True,
+            n_iter_before_update=1,
+            resume=False,
+            **kwargs
         )
+        #pymultinest.run(
+        #   self._loglike,
+        #   self._prior,
+        #   ndims,
+        #   outputfiles_basename=(self.results_path / "multinest").as_posix(),
+        #   verbose=True,
+        #   resume=False,
+        #   n_iter_before_update=1,
+        #   **kwargs
+        #)
         self.results = self.save_results()
 
     def save_results(self):
