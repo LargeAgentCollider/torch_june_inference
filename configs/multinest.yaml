@@ -1,5 +1,6 @@
 title: MultiNest example configuration file.
 
+device: "cpu"
 june_configuration_file: "/Users/arnull/code/torch_june_inference/configs/june_config.yaml"
 
 results_path: "./test_multinest"

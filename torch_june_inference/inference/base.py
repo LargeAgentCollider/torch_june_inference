@@ -18,6 +18,7 @@ class InferenceEngine(ABC):
         time_stamps,
         data_observable,
         results_path,
+        device,
     ):
         super().__init__()
         self.runner = runner
@@ -27,6 +28,7 @@ class InferenceEngine(ABC):
         self.time_stamps = time_stamps
         self.data_observable = data_observable
         self.results_path = self._read_path(results_path)
+        self.device = device
 
     @classmethod
     def from_file(cls, fpath):
@@ -50,6 +52,7 @@ class InferenceEngine(ABC):
             results_path=parameters["results_path"],
             observed_data=observed_data,
             data_observable=data_observable,
+            device=parameters["device"],
         )
 
     @classmethod
@@ -74,7 +77,7 @@ class InferenceEngine(ABC):
         data_params = params["data"]
         data_timestamps = data_params["time_stamps"]
         df = pd.read_csv(data_params["observed_data"])
-        data = torch.tensor(df[data_params["observable"]])
+        data = torch.tensor(df[data_params["observable"]], device=params["device"])
         return data
 
     def _read_path(self, results_path):

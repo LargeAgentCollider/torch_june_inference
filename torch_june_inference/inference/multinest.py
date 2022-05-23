@@ -31,7 +31,7 @@ class MultiNest(InferenceEngine):
         with torch.no_grad():
             state_dict = self.runner.model.state_dict()
             for i, key in enumerate(self.priors):
-                state_dict[key].copy_(torch.tensor(cube[i]))
+                state_dict[key].copy_(torch.tensor(cube[i], device=self.device))
             # Run model
             self.runner.run()
         # Compare to data
