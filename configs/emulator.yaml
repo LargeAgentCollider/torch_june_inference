@@ -1,0 +1,9 @@
+title: Emulator example configuration file.
+
+device: "mpi_rank"
+
+june_configuration_file: "/Users/arnull/code/torch_june_inference/configs/june_config.yaml"
+
+save_path: "./emulator.path"
+
+n_samples: 250

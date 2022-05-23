@@ -7,16 +7,22 @@ from torch_june_inference.inference.base import InferenceEngine
 
 class Pyro(InferenceEngine):
     def pyro_model(self, y_obs):
+        self.runner.reset_model()
         with torch.no_grad():
             state_dict = self.runner.model.state_dict()
             for i, key in enumerate(self.priors):
                 value = pyro.sample(key, self.priors[key]).to(self.device)
                 state_dict[key].copy_(value)
-        self.runner.run()
+        print("-----")
+        print(state_dict["infection_passing.log_beta_household"])
+        results = self.runner.run()
         # Compare to data
         n_agents = self.runner.n_agents
-        y = self.runner.results[self.data_observable][self.time_stamps] / n_agents
+        # y = self.runner.results[self.data_observable][self.time_stamps] / n_agents
+        y = results[self.data_observable][self.time_stamps] / n_agents
         y_obs = y_obs[self.time_stamps] / n_agents
+        print(f"y {y.item()}")
+        print(f"y_obs {y_obs.item()}")
         pyro.sample(
             self.data_observable,
             self.likelihood(y),
@@ -35,7 +41,12 @@ class Pyro(InferenceEngine):
 
     def run(self):
         dfs = {"Sample": pd.DataFrame(), "Warmup": pd.DataFrame()}
-        mcmc_kernel = pyro.infer.NUTS(self.pyro_model)
+        kernel_f = getattr(
+            pyro.infer, self.inference_configuration["kernel"].pop("type")
+        )
+        mcmc_kernel = kernel_f(
+            self.pyro_model, **self.inference_configuration["kernel"]
+        )
         mcmc = pyro.infer.MCMC(
             mcmc_kernel,
             num_samples=self.inference_configuration["num_samples"],

@@ -1,17 +1,13 @@
-import matplotlib.pyplot as plt
-
 from torch_june.runner import Runner
+import torch
+import sys
 
-runner = Runner.from_file("./configs/june_config.yaml")
-runner.run()
+with torch.no_grad():
+    runner = Runner.from_file(sys.argv[1])
+    results = runner.run()
 
-results = runner.results
-dates = results["dates"]
 n_agents = runner.data["agent"].id.shape[0]
-cases_per_timestep = results["cases_per_timestep"].detach().cpu().numpy() / n_agents
-runner.save_results()
+print(results["cases_per_timestep"])
+print(results["cases_per_timestep"] / n_agents)
 
-fig, ax = plt.subplots()
-ax.plot(dates, cases_per_timestep)
-fig.autofmt_xdate()
-plt.show()
+runner.save_results(results)

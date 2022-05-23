@@ -43,7 +43,10 @@ class InferenceEngine(ABC):
 
     @classmethod
     def from_parameters(cls, parameters):
-        runner = Runner.from_file(parameters["june_configuration_file"])
+        with open(parameters["june_configuration_file"], "r") as f:
+            june_params = yaml.safe_load(f)
+            june_params["system"]["device"] = parameters["device"]
+        runner = Runner.from_parameters(june_params)
         priors = cls.read_parameters_to_fit(parameters)
         likelihood = cls.initialize_likelihood(parameters)
         observed_data = cls.load_observed_data(parameters)

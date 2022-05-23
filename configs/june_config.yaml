@@ -5,7 +5,7 @@ system:
   random_seed: random
 
 data_path: "/Users/arnull/code/torch_june/worlds/data_two_super_areas.pkl"
-save_path: "./example"
+save_path: "./june_example"
 
 timer:
   total_days: 45
