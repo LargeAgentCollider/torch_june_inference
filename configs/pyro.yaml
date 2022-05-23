@@ -1,0 +1,37 @@
+title: Pyro example configuration file.
+
+device: "cpu"
+june_configuration_file: "/Users/arnull/code/torch_june_inference/configs/june_config.yaml"
+
+results_path: "./pyro_tests"
+
+inference_configuration:
+  solver: NUTS
+  num_samples: 5000
+  warmup_steps: 100
+
+parameters_to_fit:
+  infection_passing.log_beta_household:
+    prior:
+      dist: Normal
+      loc: 0.0
+      scale: 0.1
+        #infection_passing.log_beta_company:
+        #  prior:
+        #    dist: Uniform
+        #    low: -0.5
+        #    high: 0.5
+        #infection_passing.log_beta_school:
+        #  prior:
+        #    dist: Uniform
+        #    low: -0.5
+        #    high: 0.5
+
+data:
+  observable: cases_per_timestep
+  time_stamps: [-1]
+  observed_data: "/Users/arnull/code/torch_june_inference/example/results.csv"
+
+likelihood:
+  distribution: Normal
+  error: 0.005

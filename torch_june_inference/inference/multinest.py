@@ -19,7 +19,7 @@ def read_pyro_to_scipy(dist, **kwargs):
             loc=kwargs["low"], scale=kwargs["high"] - kwargs["low"]
         )
     elif dist == "Normal":
-        return stats.norm(loc=kwargs["mean"], scale=kwargs["std"])
+        return stats.norm(loc=kwargs["loc"], scale=kwargs["scale"])
     else:
         raise NotImplementedError
 

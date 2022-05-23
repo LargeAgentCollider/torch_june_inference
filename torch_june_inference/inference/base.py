@@ -8,6 +8,7 @@ import pyro.distributions as dist
 from torch_june import Runner
 from torch_june.utils import read_device
 
+
 class InferenceEngine(ABC):
     def __init__(
         self,
@@ -17,6 +18,7 @@ class InferenceEngine(ABC):
         observed_data,
         time_stamps,
         data_observable,
+        inference_configuration,
         results_path,
         device,
     ):
@@ -27,6 +29,7 @@ class InferenceEngine(ABC):
         self.observed_data = observed_data
         self.time_stamps = time_stamps
         self.data_observable = data_observable
+        self.inference_configuration = inference_configuration
         self.results_path = self._read_path(results_path)
         self.device = device
 
@@ -46,6 +49,7 @@ class InferenceEngine(ABC):
         observed_data = cls.load_observed_data(parameters)
         time_stamps = parameters["data"]["time_stamps"]
         data_observable = parameters["data"]["observable"]
+        inference_configuration = parameters.get("inference_configuration", {})
         return cls(
             runner=runner,
             priors=priors,
@@ -54,7 +58,8 @@ class InferenceEngine(ABC):
             results_path=parameters["results_path"],
             observed_data=observed_data,
             data_observable=data_observable,
-            device = parameters["device"]
+            device=parameters["device"],
+            inference_configuration=inference_configuration,
         )
 
     @classmethod
