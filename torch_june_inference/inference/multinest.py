@@ -14,12 +14,6 @@ from torch_june_inference.paths import config_path
 
 
 class MultiNest(InferenceEngine):
-    @classmethod
-    def from_file(cls, fpath=config_path / "multinest.yaml"):
-        with open(fpath, "r") as f:
-            params = yaml.safe_load(f)
-        return cls.from_parameters(params)
-
     def _prior(self, cube):
         """
         TODO: Need to invert from unit cube for other distros.
@@ -27,7 +21,7 @@ class MultiNest(InferenceEngine):
         # for i in range(ndim):
         #    cube[i] = cube[i] - 1.0
         # return cube
-        return cube - 1.0
+        return cube - 0.5
 
     def _loglike(self, cube):
         # Set model parameters
@@ -41,9 +35,6 @@ class MultiNest(InferenceEngine):
             # Compare to data
             y = self.runner.results[self.data_observable][self.time_stamps] / n_agents
             y_obs = self.observed_data[self.time_stamps] / n_agents
-            print(f"y {y}")
-            print(f"y_obs {y_obs}")
-            print("---")
             return self.likelihood(y).log_prob(y_obs).sum().cpu().item()
 
     def run(self, **kwargs):

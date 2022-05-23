@@ -6,9 +6,7 @@ from pathlib import Path
 import pyro.distributions as dist
 
 from torch_june import Runner
-
-def fstr(template):
-    return eval(f"f'{template}'")
+from torch_june.utils import read_device
 
 class InferenceEngine(ABC):
     def __init__(
@@ -30,12 +28,14 @@ class InferenceEngine(ABC):
         self.time_stamps = time_stamps
         self.data_observable = data_observable
         self.results_path = self._read_path(results_path)
-        self.device = fstr(device)
+        self.device = device
 
     @classmethod
     def from_file(cls, fpath):
         with open(fpath, "r") as f:
             params = yaml.safe_load(f)
+        # reads mpi setup
+        params["device"] = read_device(params["device"])
         return cls.from_parameters(params)
 
     @classmethod
@@ -54,7 +54,7 @@ class InferenceEngine(ABC):
             results_path=parameters["results_path"],
             observed_data=observed_data,
             data_observable=data_observable,
-            device=parameters["device"],
+            device = parameters["device"]
         )
 
     @classmethod
