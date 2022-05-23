@@ -48,6 +48,7 @@ class MultiNest(InferenceEngine):
             outputfiles_basename=(self.results_path / "multinest").as_posix(),
             verbose=True,
             resume=False,
+            n_iter_before_update=1,
             **kwargs
         )
         self.results = self.save_results()
