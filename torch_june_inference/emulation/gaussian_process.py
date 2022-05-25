@@ -26,21 +26,25 @@ class GPEmulator(gpytorch.models.ExactGP):
         super(GPEmulator, self).__init__(train_x, train_y, likelihood)
         self.likelihood = likelihood.to(device)
         self.mean_module = gpytorch.means.MultitaskMean(
-            gpytorch.means.ZeroMean(), num_tasks=n_tasks
+            gpytorch.means.LinearMean(4), num_tasks=n_tasks
         )
         self.covar_module = gpytorch.kernels.MultitaskKernel(
-            gpytorch.kernels.RBFKernel(), num_tasks=n_tasks, rank=1
+            gpytorch.kernels.RBFKernel(length_scale_constraint=gpytorch.constraints.GreaterThan(0.001)),
+            num_tasks=n_tasks,
+            rank=1,
         )
         self.train_x = train_x
         self.train_y = train_y
         self.save_path = save_path
+        self.device = device
+        self.to(device)
 
     @classmethod
     def from_parameters(cls, params):
-        train_x, train_y = cls.load_samples(
-            params["samples_path"], time_stamps=params["time_stamps"]
-        )
         device = params["device"]
+        train_x, train_y = cls.load_samples(
+            params["samples_path"], time_stamps=params["time_stamps"], device=device
+        )
         return cls(
             train_x=train_x,
             train_y=train_y,
@@ -57,11 +61,11 @@ class GPEmulator(gpytorch.models.ExactGP):
         return cls.from_parameters(params)
 
     @classmethod
-    def load_samples(cls, fpath, time_stamps):
+    def load_samples(cls, fpath, time_stamps, device):
         with open(fpath, "rb") as f:
             samples = pickle.load(f)
-        train_x = samples["samples_x"].float()
-        train_y = samples["samples_y"][:, time_stamps].float()
+        train_x = samples["samples_x"].float().to(device)
+        train_y = samples["samples_y"][:, time_stamps].float().to(device)
         return train_x, train_y
 
     def restore_state(self, fpath):
@@ -91,7 +95,7 @@ class GPEmulator(gpytorch.models.ExactGP):
             if i >= max_training_iter:
                 break
             loss.backward()
-            pbar.set_description(f"{i}: {loss:.3e}\t {previous_loss:.3e}")
+            pbar.set_description(f"{i}: {loss:.3e} {previous_loss:.2e}")
 
             optimizer.step()
             if i % 100 == 0:

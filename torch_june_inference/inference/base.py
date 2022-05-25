@@ -35,6 +35,7 @@ class InferenceEngine(ABC):
         self.results_path = self._read_path(results_path)
         self.device = device
         self.emulator = emulator
+        self.emulator.set_eval()
 
     @classmethod
     def from_file(cls, fpath):
@@ -48,7 +49,7 @@ class InferenceEngine(ABC):
     def from_parameters(cls, parameters):
         with open(parameters["june_configuration_file"], "r") as f:
             june_params = yaml.safe_load(f)
-            june_params["system"]["device"] = parameters["device"]
+        june_params["system"]["device"] = parameters["device"]
         runner = Runner.from_parameters(june_params)
         priors = cls.read_parameters_to_fit(parameters)
         likelihood = cls.initialize_likelihood(parameters)
@@ -57,7 +58,11 @@ class InferenceEngine(ABC):
         data_observable = parameters["data"]["observable"]
         emulator_params = parameters["emulator"]
         if emulator_params.get("use_emulator", False):
-            emulator = cls.load_emulator(emulator_params)
+            emulator_state_path = emulator_params["emulator_path"]
+            with open(emulator_params["emulator_config_path"], "r") as f:
+                emulator_params = yaml.safe_load(f)
+            emulator_params["device"] = parameters["device"]
+            emulator = cls.load_emulator(emulator_params, emulator_state_path)
         else:
             emulator = None
         inference_configuration = parameters.get("inference_configuration", {})
@@ -71,7 +76,7 @@ class InferenceEngine(ABC):
             data_observable=data_observable,
             device=parameters["device"],
             inference_configuration=inference_configuration,
-            emulator=emulator
+            emulator=emulator,
         )
 
     @classmethod
@@ -89,34 +94,40 @@ class InferenceEngine(ABC):
         lh_params = params["likelihood"]
         dist_class = getattr(dist, lh_params["distribution"])
         error = lh_params["error"]
-        return lambda x: dist_class(x, error)
+
+        def likelihood(**kwargs):
+            return dist_class(**kwargs)
+
+        return likelihood
 
     @classmethod
     def load_observed_data(cls, params):
         data_params = params["data"]
         data_timestamps = data_params["time_stamps"]
         df = pd.read_csv(data_params["observed_data"])
-        data = torch.tensor(df[data_params["observable"]], device=params["device"])
+        data = torch.tensor(
+            df[data_params["observable"]], device=params["device"]
+        ).float()
         return data
 
     @classmethod
-    def load_emulator(cls, emulator_params):
-        emulator = GPEmulator.from_file(emulator_params["emulator_config_path"])
-        emulator.restore_state(emulator_params["emulator_path"])
+    def load_emulator(cls, emulator_params, emulator_state_path):
+        emulator = GPEmulator.from_parameters(emulator_params)
+        emulator.restore_state(emulator_state_path)
         return emulator
 
     def evaluate_emulator(self, samples):
         with torch.no_grad():
             test_x = torch.tensor(
                 [samples[key] for key in samples],
-                device=device,
-            )
-            observed_pred = likelihood(model(test_x))
+                device=self.device,
+            ).reshape(1, -1)
+            observed_pred = self.emulator.likelihood(self.emulator(test_x))
             mean = observed_pred.mean
             lower, upper = observed_pred.confidence_region()
-        res = mean.flatten() / self.n_agents
+        res = mean.flatten() 
         error_emulator = (abs(res - lower) + abs(res - upper)) / 2
-        error = error_emulator.flatten() / n_agents + 0.025
+        error = error_emulator.flatten() 
         return res, error
 
     def evaluate_model(self, samples):
@@ -131,11 +142,10 @@ class InferenceEngine(ABC):
 
     def evaluate(self, samples):
         if self.emulator:
-            res, error = self.evaluate_model(samples)
-        else:
             res, error = self.evaluate_emulator(samples)
+        else:
+            res, error = self.evaluate_model(samples)
         return res, error
-
 
     def _read_path(self, results_path):
         results_path = Path(results_path)

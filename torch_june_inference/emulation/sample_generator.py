@@ -5,7 +5,7 @@ from tqdm import tqdm
 from pyDOE import lhs
 
 from torch_june import Runner
-from torch_june.mpi_setup import mpi_rank, mpi_size
+from torch_june.mpi_setup import mpi_rank, mpi_size, mpi_comm
 
 
 class SampleGenerator:
@@ -57,6 +57,11 @@ class SampleGenerator:
                 samples_y = tosave.reshape(1, -1)
             else:
                 samples_y = torch.vstack((samples_y, tosave))
+        samples_y = samples_y / self.runner.n_agents
+        #samples_x = samples_x.cpu().numpy()
+        #samples_y = samples_y.cpu().numpy()
+        #mpi_comm.Barrier()
+
         return samples_x, samples_y
 
     def run_model(self, sample_x):
