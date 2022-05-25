@@ -17,7 +17,6 @@ class InferenceEngine(ABC):
         priors,
         likelihood,
         observed_data,
-        time_stamps,
         data_observable,
         inference_configuration,
         results_path,
@@ -29,7 +28,6 @@ class InferenceEngine(ABC):
         self.priors = priors
         self.likelihood = likelihood
         self.observed_data = observed_data
-        self.time_stamps = time_stamps
         self.data_observable = data_observable
         self.inference_configuration = inference_configuration
         self.results_path = self._read_path(results_path)
@@ -55,7 +53,6 @@ class InferenceEngine(ABC):
         priors = cls.read_parameters_to_fit(parameters)
         likelihood = cls.initialize_likelihood(parameters)
         observed_data = cls.load_observed_data(parameters)
-        time_stamps = parameters["data"]["time_stamps"]
         data_observable = parameters["data"]["observable"]
         emulator_params = parameters["emulator"]
         if emulator_params.get("use_emulator", False):
@@ -71,7 +68,6 @@ class InferenceEngine(ABC):
             runner=runner,
             priors=priors,
             likelihood=likelihood,
-            time_stamps=time_stamps,
             results_path=parameters["results_path"],
             observed_data=observed_data,
             data_observable=data_observable,
@@ -104,7 +100,6 @@ class InferenceEngine(ABC):
     @classmethod
     def load_observed_data(cls, params):
         data_params = params["data"]
-        data_timestamps = data_params["time_stamps"]
         df = pd.read_csv(data_params["observed_data"])
         data = torch.tensor(
             df[data_params["observable"]], device=params["device"]
@@ -137,9 +132,10 @@ class InferenceEngine(ABC):
             for key in self.priors:
                 value = samples[key]
                 state_dict[key].copy_(value)
-        results = self.runner.run()
-        y = results[self.data_observable][self.time_stamps] / self.runner.n_agents
-        return y, 0.0
+        return results, 0.0
+        #results = self.runner.run()
+        #y = results[self.data_observable][self.time_stamps] / self.runner.n_agents
+        #return y, 0.0
 
     def evaluate(self, samples):
         if self.emulator:

@@ -15,11 +15,15 @@ class Pyro(InferenceEngine):
         y, model_error = self.evaluate(samples)
         # Compare to data
         y_obs = y_obs[self.time_stamps] / self.runner.n_agents
-        pyro.sample(
-            self.data_observable,
-            self.likelihood(loc=y, scale=model_error),
-            obs=y_obs,
-        )
+        for key in self.data_obervable:
+            time_stamps = self.data_obervable["time_stamps"]
+            data = y[key][time_stamps]
+            data_obs = y[key].iloc[time_stamps]
+            pyro.sample(
+                key,
+                self.likelihood(loc=data, scale=model_error),
+                obs=data_obs,
+            )
 
     def logger(self, kernel, samples, stage, i, dfs):
         df = dfs[stage]
