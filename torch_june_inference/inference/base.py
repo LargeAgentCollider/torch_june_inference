@@ -15,7 +15,6 @@ class InferenceEngine(ABC):
         self,
         runner,
         priors,
-        likelihood,
         observed_data,
         data_observable,
         inference_configuration,
@@ -26,7 +25,6 @@ class InferenceEngine(ABC):
         super().__init__()
         self.runner = runner
         self.priors = priors
-        self.likelihood = likelihood
         self.observed_data = observed_data
         self.data_observable = data_observable
         self.inference_configuration = inference_configuration
@@ -51,7 +49,6 @@ class InferenceEngine(ABC):
         june_params["system"]["device"] = parameters["device"]
         runner = Runner.from_parameters(june_params)
         priors = cls.read_parameters_to_fit(parameters)
-        likelihood = cls.initialize_likelihood(parameters)
         observed_data = cls.load_observed_data(parameters)
         data_observable = parameters["data"]["observable"]
         emulator_params = parameters["emulator"]
@@ -67,7 +64,6 @@ class InferenceEngine(ABC):
         return cls(
             runner=runner,
             priors=priors,
-            likelihood=likelihood,
             results_path=parameters["results_path"],
             observed_data=observed_data,
             data_observable=data_observable,
@@ -85,16 +81,6 @@ class InferenceEngine(ABC):
             dist_class = getattr(dist, dist_info.pop("dist"))
             ret[key] = dist_class(**dist_info)
         return ret
-
-    @classmethod
-    def initialize_likelihood(cls, params):
-        lh_params = params["likelihood"]
-        dist_class = getattr(dist, lh_params["distribution"])
-
-        def likelihood(**kwargs):
-            return dist_class(**kwargs)
-
-        return likelihood
 
     @classmethod
     def load_observed_data(cls, params):

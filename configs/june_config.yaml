@@ -45,7 +45,7 @@ infection_seed:
 
 networks:
   household:
-    log_beta: 0.1
+    log_beta: 0.5
   company:
     log_beta: -0.1
   school:

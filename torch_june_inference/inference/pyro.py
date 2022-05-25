@@ -14,17 +14,20 @@ class Pyro(InferenceEngine):
             samples[key] = value
         y, model_error = self.evaluate(samples)
         # Compare to data
+        likelihood_fn = getattr(
+            pyro.distributions, self.inference_configuration["likelihood"]
+        )
         for key in self.data_observable:
             time_stamps = self.data_observable[key]["time_stamps"]
             data = y[key][time_stamps]
             data_obs = y_obs[key][time_stamps]
-            # print(f"data {data}")
-            # print(f"data_obs {data_obs}")
-            # print("----")
+            print(f"data {data}")
+            print(f"data_obs {data_obs}")
+            print("----")
             error = self.data_observable[key]["error"] + model_error
             pyro.sample(
                 key,
-                self.likelihood(loc=data, scale=error),
+                likelihood_fn(data, error),
                 obs=data_obs,
             )
 
