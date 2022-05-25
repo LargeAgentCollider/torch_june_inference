@@ -6,7 +6,7 @@ from pathlib import Path
 import pyro.distributions as dist
 
 from torch_june import Runner
-from torch_june.utils import read_device
+from torch_june_inference.utils import read_device
 from torch_june_inference.emulation import GPEmulator
 
 
@@ -35,7 +35,8 @@ class InferenceEngine(ABC):
         self.results_path = self._read_path(results_path)
         self.device = device
         self.emulator = emulator
-        self.emulator.set_eval()
+        if self.emulator:
+            self.emulator.set_eval()
 
     @classmethod
     def from_file(cls, fpath):

@@ -6,7 +6,7 @@ from tqdm import tqdm
 import numpy as np
 import gpytorch
 
-from torch_june.utils import read_device
+from torch_june_inference.utils import read_device
 
 
 class GPEmulator(gpytorch.models.ExactGP):
@@ -26,10 +26,12 @@ class GPEmulator(gpytorch.models.ExactGP):
         super(GPEmulator, self).__init__(train_x, train_y, likelihood)
         self.likelihood = likelihood.to(device)
         self.mean_module = gpytorch.means.MultitaskMean(
-            gpytorch.means.LinearMean(4), num_tasks=n_tasks
+            gpytorch.means.LinearMean(train_y.shape[1]), num_tasks=n_tasks
         )
         self.covar_module = gpytorch.kernels.MultitaskKernel(
-            gpytorch.kernels.RBFKernel(length_scale_constraint=gpytorch.constraints.GreaterThan(0.001)),
+            gpytorch.kernels.RBFKernel(
+                length_scale_constraint=gpytorch.constraints.GreaterThan(0.001)
+            ),
             num_tasks=n_tasks,
             rank=1,
         )
@@ -89,6 +91,7 @@ class GPEmulator(gpytorch.models.ExactGP):
             # Zero gradients from previous iteration
             optimizer.zero_grad()
             # Output from model
+            print(self.train_x)
             output = self(self.train_x)
             # Calc loss and backprop gradients
             loss = -mll(output, self.train_y)

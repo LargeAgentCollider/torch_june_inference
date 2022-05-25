@@ -5,7 +5,7 @@ from tqdm import tqdm
 from pyDOE import lhs
 
 from torch_june import Runner
-from torch_june.mpi_setup import mpi_rank, mpi_size, mpi_comm
+from torch_june_inference.mpi_setup import mpi_rank, mpi_size, mpi_comm
 
 
 class SampleGenerator:

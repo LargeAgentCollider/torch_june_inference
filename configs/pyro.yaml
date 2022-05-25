@@ -13,29 +13,29 @@ inference_configuration:
   warmup_steps: 100
 
 parameters_to_fit:
-  infection_passing.log_beta_household:
+  infection_networks.networks.household.log_beta:
     prior:
       dist: Normal
       loc: 0.0
       scale: 0.1
-  infection_passing.log_beta_company:
+  infection_networks.networks.company.log_beta:
     prior:
       dist: Normal
       loc: 0.0
       scale: 0.1
-  infection_passing.log_beta_school:
+  infection_networks.networks.school.log_beta:
     prior:
       dist: Normal
       loc: 0.3
       scale: 0.1
-  infection_passing.log_beta_leisure:
+  infection_networks.networks.pub.log_beta:
     prior:
       dist: Normal
       loc: -0.6
       scale: 0.1
 
 emulator:
-  use_emulator: true
+  use_emulator: false
   emulator_config_path: "./configs/emulator.yaml"
   emulator_path: "./data/emulator.path"
 

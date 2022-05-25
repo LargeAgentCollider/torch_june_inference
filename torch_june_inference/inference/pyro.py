@@ -15,11 +15,6 @@ class Pyro(InferenceEngine):
         y, model_error = self.evaluate(samples)
         # Compare to data
         y_obs = y_obs[self.time_stamps] / self.runner.n_agents
-        #print("--")
-        #print(samples)
-        #print(f"y {y}")
-        #print(f"y_obs {y_obs}")
-        #print(f"error {model_error}")
         pyro.sample(
             self.data_observable,
             self.likelihood(loc=y, scale=model_error),
