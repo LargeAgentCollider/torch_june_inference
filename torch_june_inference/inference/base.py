@@ -100,11 +100,14 @@ class InferenceEngine(ABC):
     @classmethod
     def load_observed_data(cls, params):
         data_params = params["data"]
-        df = pd.read_csv(data_params["observed_data"])
-        data = torch.tensor(
-            df[data_params["observable"]], device=params["device"]
-        ).float()
-        return data
+        df = pd.read_csv(data_params["observed_data"], index_col=0)
+        ret = {}
+        for key in df:
+            ret[key] = torch.tensor(df[key], device=params["device"], dtype=torch.float)
+        # data = torch.tensor(
+        #     df[data_params["observable"]], device=params["device"]
+        # ).float()
+        return ret
 
     @classmethod
     def load_emulator(cls, emulator_params, emulator_state_path):
@@ -121,9 +124,9 @@ class InferenceEngine(ABC):
             observed_pred = self.emulator.likelihood(self.emulator(test_x))
             mean = observed_pred.mean
             lower, upper = observed_pred.confidence_region()
-        res = mean.flatten() 
+        res = mean.flatten()
         error_emulator = (abs(res - lower) + abs(res - upper)) / 2
-        error = error_emulator.flatten() 
+        error = error_emulator.flatten()
         return res, error
 
     def evaluate_model(self, samples):
@@ -132,10 +135,10 @@ class InferenceEngine(ABC):
             for key in self.priors:
                 value = samples[key]
                 state_dict[key].copy_(value)
+        results = self.runner.run()
         return results, 0.0
-        #results = self.runner.run()
-        #y = results[self.data_observable][self.time_stamps] / self.runner.n_agents
-        #return y, 0.0
+        # y = results[self.data_observable][self.time_stamps] / self.runner.n_agents
+        # return y, 0.0
 
     def evaluate(self, samples):
         if self.emulator:

@@ -14,11 +14,14 @@ class Pyro(InferenceEngine):
             samples[key] = value
         y, model_error = self.evaluate(samples)
         # Compare to data
-        y_obs = y_obs[self.time_stamps] / self.runner.n_agents
-        for key in self.data_obervable:
-            time_stamps = self.data_obervable["time_stamps"]
+        print("---")
+        print(samples)
+        for key in self.data_observable:
+            time_stamps = self.data_observable[key]["time_stamps"]
             data = y[key][time_stamps]
-            data_obs = y[key].iloc[time_stamps]
+            data_obs = y_obs[key][time_stamps]
+            print(f"data {data}")
+            print(f"data_obs {data_obs}")
             pyro.sample(
                 key,
                 self.likelihood(loc=data, scale=model_error),

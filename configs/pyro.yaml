@@ -1,49 +1,54 @@
 title: Pyro example configuration file.
 
 device: "cpu"
-june_configuration_file: "/Users/arnull/code/torch_june_inference/configs/june_config.yaml"
+june_configuration_file: "./configs/june_config.yaml"
 
 results_path: "./pyro_tests"
 
 inference_configuration:
-  kernel:
+  kernel: 
     type: NUTS
     max_tree_depth: 5
   num_samples: 5000
-  warmup_steps: 100
+  warmup_steps: 1000
 
 parameters_to_fit:
   infection_networks.networks.household.log_beta:
     prior:
-      dist: Normal
-      loc: 0.0
-      scale: 0.1
+      dist: Uniform
+      low: -0.25
+      high: 0.25
   infection_networks.networks.company.log_beta:
     prior:
-      dist: Normal
-      loc: 0.0
-      scale: 0.1
+      dist: Uniform
+      low: -0.25
+      high: 0.25
   infection_networks.networks.school.log_beta:
     prior:
-      dist: Normal
-      loc: 0.3
-      scale: 0.1
-  infection_networks.networks.pub.log_beta:
-    prior:
-      dist: Normal
-      loc: -0.6
-      scale: 0.1
+      dist: Uniform
+      low: -0.25
+      high: 0.25
 
 emulator:
   use_emulator: false
-  emulator_config_path: "./configs/emulator.yaml"
+  emulator_config_path: "./configs/emulator_cosma.yaml"
   emulator_path: "./data/emulator.path"
 
 data:
-  observable: cases_per_timestep
-  time_stamps: [-1]
-  observed_data: "/Users/arnull/code/torch_june_inference/example/results.csv"
+  observable: 
+    cases_by_age_18:
+      time_stamps: [10, 20, 30]
+    cases_by_age_25:
+      time_stamps: [10, 20, 30]
+    cases_by_age_65:
+      time_stamps: [10, 20, 30]
+    cases_by_age_80:
+      time_stamps: [10, 20, 30]
+    cases_by_age_100:
+      time_stamps: [10, 20, 30]
+  observed_data: "./june_example/results.csv"
 
 likelihood:
   distribution: Normal
-  error: 0.01
+  error: 0.025
+
