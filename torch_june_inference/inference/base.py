@@ -90,7 +90,6 @@ class InferenceEngine(ABC):
     def initialize_likelihood(cls, params):
         lh_params = params["likelihood"]
         dist_class = getattr(dist, lh_params["distribution"])
-        error = lh_params["error"]
 
         def likelihood(**kwargs):
             return dist_class(**kwargs)
@@ -135,6 +134,8 @@ class InferenceEngine(ABC):
             for key in self.priors:
                 value = samples[key]
                 state_dict[key].copy_(value)
+        #for key in self.priors:
+        #    state_dict[key].requires_grad = True
         results = self.runner.run()
         return results, 0.0
         # y = results[self.data_observable][self.time_stamps] / self.runner.n_agents
