@@ -7,7 +7,7 @@ with torch.no_grad():
     results = runner.run()
 
 n_agents = runner.data["agent"].id.shape[0]
+print(results["cases_per_timestep"] * n_agents)
 print(results["cases_per_timestep"])
-print(results["cases_per_timestep"] / n_agents)
 
 runner.save_results(results)

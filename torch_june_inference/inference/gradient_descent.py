@@ -15,10 +15,10 @@ class GradientDescent(InferenceEngine):
                 param.requires_grad = False
         return names_to_save
 
-    def _get_optimizer(self, parameters_to_optimize):
+    def _get_optimizer(self):
         config = self.inference_configuration["optimizer"]
         optimizer_class = getattr(torch.optim, config.pop("type"))
-        optimizer = optimizer_class(parameters_to_optimize, **config)
+        optimizer = optimizer_class(self.runner.model.parameters(), **config)
         return optimizer
 
     def _get_loss(self):
@@ -27,9 +27,9 @@ class GradientDescent(InferenceEngine):
         loss = loss_class(**config)
         return loss
 
-    def run(self):
+    def run(self, verbose=True):
         names_to_save = self._set_initial_parameters()
-        optimizer = self._get_optimizer(self.runner.model.parameters())
+        optimizer = self._get_optimizer()
         loss_fn = self._get_loss()
         df = pd.DataFrame()
         n_epochs = self.inference_configuration["n_epochs"]
@@ -49,11 +49,12 @@ class GradientDescent(InferenceEngine):
             loss.backward()
             optimizer.step()
             running_loss = loss.item()
-            print(f"[{epoch + 1}] loss: {running_loss:.10e}")
+            if verbose:
+                print(f"[{epoch + 1}] loss: {running_loss:.10e}")
             for name, param in self.runner.model.named_parameters():
                 if name in names_to_save:
                     df.loc[epoch, name] = param.item()
             df.loc[epoch, "loss"] = running_loss
             df.to_csv(self.results_path / "training.csv", index=False)
         model_to_save_path = self.results_path / "model.path"
-        torch.save(model.state_dict(), model_to_save_path)
+        torch.save(self.runner.model.state_dict(), model_to_save_path)
