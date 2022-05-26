@@ -70,5 +70,6 @@ def get_runner_results(runner, scope="session"):
 
 @fixture(name="june_results_path")
 def get_runner_results_path(runner, scope="session"):
-    runner.run()
+    results = runner.run()
+    runner.save_results(results)
     return runner.save_path / "results.csv"
