@@ -21,13 +21,13 @@ class Pyro(InferenceEngine):
             time_stamps = self.data_observable[key]["time_stamps"]
             data = y[key][time_stamps]
             data_obs = y_obs[key][time_stamps]
-            print(f"data {data}")
-            print(f"data_obs {data_obs}")
-            print("----")
-            error = self.data_observable[key]["error"] + model_error
+            #print(f"data {data}")
+            #print(f"data_obs {data_obs}")
+            #print("----")
+            rel_error = self.data_observable[key]["error"]
             pyro.sample(
                 key,
-                likelihood_fn(data, error),
+                likelihood_fn(data, rel_error * data),
                 obs=data_obs,
             )
 
@@ -39,7 +39,7 @@ class Pyro(InferenceEngine):
             unconstrained_samples = samples[key].detach()
             constrained_samples = kernel.transforms[key].inv(unconstrained_samples)
             df.loc[i, key] = constrained_samples.cpu().item()
-        df.to_csv(self.results_path / f"chain_{stage}.csv", index=False)
+        df.to_csv(self.results_path / f"pyro_chain_{stage}.csv", index=False)
 
     def run(self):
         dfs = {"Sample": pd.DataFrame(), "Warmup": pd.DataFrame()}
