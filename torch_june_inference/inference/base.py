@@ -120,12 +120,8 @@ class InferenceEngine(ABC):
             for key in self.priors:
                 value = samples[key]
                 state_dict[key].copy_(value)
-        #for key in self.priors:
-        #    state_dict[key].requires_grad = True
         results = self.runner.run()
         return results, 0.0
-        # y = results[self.data_observable][self.time_stamps] / self.runner.n_agents
-        # return y, 0.0
 
     def evaluate(self, samples):
         if self.emulator:

@@ -42,6 +42,7 @@ class Pyro(InferenceEngine):
         df.to_csv(self.results_path / f"chain_{stage}.csv", index=False)
 
     def run(self):
+        pyro.nn.module.to_pyro_module_(self.runner.model)
         dfs = {"Sample": pd.DataFrame(), "Warmup": pd.DataFrame()}
         kernel_f = getattr(
             pyro.infer, self.inference_configuration["kernel"].pop("type")
