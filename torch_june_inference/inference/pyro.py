@@ -17,14 +17,17 @@ class Pyro(InferenceEngine):
         likelihood_fn = getattr(
             pyro.distributions, self.inference_configuration["likelihood"]
         )
+        #print("####################")
+        #print(samples)
         for key in self.data_observable:
             time_stamps = self.data_observable[key]["time_stamps"]
             data = y[key][time_stamps]
             data_obs = y_obs[key][time_stamps]
             #print(f"data {data}")
             #print(f"data_obs {data_obs}")
-            #print("----")
             rel_error = self.data_observable[key]["error"]
+            #print(f"error {rel_error * data}")
+            #print("----")
             pyro.sample(
                 key,
                 likelihood_fn(data, rel_error * data),
@@ -42,7 +45,7 @@ class Pyro(InferenceEngine):
         df.to_csv(self.results_path / f"pyro_chain_{stage}.csv", index=False)
 
     def run(self):
-        pyro.nn.module.to_pyro_module_(self.runner.model)
+        names_to_save = self._set_initial_parameters()
         dfs = {"Sample": pd.DataFrame(), "Warmup": pd.DataFrame()}
         kernel_f = getattr(
             pyro.infer, self.inference_configuration["kernel"].pop("type")
