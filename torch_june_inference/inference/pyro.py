@@ -17,6 +17,7 @@ class Pyro(InferenceEngine):
         likelihood_fn = getattr(
             pyro.distributions, self.inference_configuration["likelihood"]
         )
+        print(samples)
         for key in self.data_observable:
             time_stamps = self.data_observable[key]["time_stamps"]
             data = y[key][time_stamps]
