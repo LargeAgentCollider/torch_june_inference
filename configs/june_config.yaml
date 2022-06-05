@@ -10,7 +10,7 @@ data_path: '../torch_june/worlds/data_london.pkl'
 save_path: ./june_example
 
 timer:
-  total_days: 90
+  total_days: 15
   initial_day: '2022-02-01'
   step_duration:
     weekday:
@@ -41,7 +41,7 @@ timer:
       - household
 
 infection_seed:
-  n_initial_cases: 200
+  n_initial_cases: 2000
 
 networks:
   household:

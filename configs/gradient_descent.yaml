@@ -9,9 +9,9 @@ results_path: "./results/gradient_descent"
 inference_configuration:
   optimizer:
     type: SGD
-    lr: 0.01
-    momentum: 0.9
-  n_epochs: 1000
+    lr: 0.1
+    momentum: 0.1
+  n_epochs: 10000
   loss:
     type: MSELoss
     reduction: mean
