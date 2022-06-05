@@ -4,17 +4,6 @@ from torch_june_inference.inference.base import InferenceEngine
 
 
 class GradientDescent(InferenceEngine):
-    def _set_initial_parameters(self):
-        names_to_save = []
-        for name, param in self.runner.model.named_parameters():
-            if name in self.priors:
-                names_to_save.append(name)
-                with torch.no_grad():
-                    param.copy_(self.priors[name].sample())
-            else:
-                param.requires_grad = False
-        return names_to_save
-
     def _get_optimizer(self):
         config = self.inference_configuration["optimizer"]
         optimizer_class = getattr(torch.optim, config.pop("type"))
