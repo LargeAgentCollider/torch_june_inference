@@ -10,10 +10,15 @@ from torch_june_inference.utils import read_device
 
 
 class ExactGPModel(gpytorch.models.ExactGP):
-    def __init__(self, train_x, train_y, likelihood, device):
+    def __init__(self, train_x, train_y, device, likelihood=None):
+        if likelihood is None:
+            likelihood = gpytorch.likelihoods.GaussianLikelihood()
         super(ExactGPModel, self).__init__(train_x, train_y, likelihood)
+        self.likelihood = likelihood
         self.mean_module = gpytorch.means.ConstantMean()
         self.covar_module = gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel())
+        self.train_x = train_x
+        self.train_y = train_y
         self.to(device)
 
     def forward(self, x):
@@ -63,12 +68,10 @@ class GPEmulator:
         parameters,
         means,
         stds,
-        likelihood=None,
         device="cpu",
         save_path="./emulator.pkl",
     ):
         self.n_emulators = train_y.shape[-1]
-        self.likelihood = likelihood
         self.parameters = parameters
         self.means = means
         self.stds = stds
@@ -110,16 +113,12 @@ class GPEmulator:
     def _init_emulators(self):
         ret = {"means": [], "stds": []}
         for i in range(train_y.shape[-1]):
-            if self.likelihood is None:
-                likelihood = gpytorch.likelihoods.GaussianLikelihood()
             mean_emulator = ExactGPModel(
-                self.parameters, self.means[:, i], likelihood, device=self.device
+                self.parameters, self.means[:, i], device=self.device
             )
             ret["means"].append(mean_emulator)
-            if self.likelihood is None:
-                likelihood = gpytorch.likelihoods.GaussianLikelihood()
             std_emulator = ExactGPModel(
-                self.parameters, self.stds[:, i], likelihood, device=self.device
+                self.parameters, self.stds[:, i], device=self.device
             )
             ret["stds"].append(std_emulator)
 
