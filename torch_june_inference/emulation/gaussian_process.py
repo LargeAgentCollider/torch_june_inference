@@ -62,7 +62,7 @@ class ExactGPModel(gpytorch.models.ExactGP):
         self.likelihood.eval()
 
 
-class GPEmulator:
+class GPEmulator(torch.nn.Module):
     def __init__(
         self,
         parameters,
@@ -71,7 +71,7 @@ class GPEmulator:
         device="cpu",
         save_path="./emulator.pkl",
     ):
-        self.n_emulators = train_y.shape[-1]
+        super().__init__()
         self.parameters = parameters
         self.means = means
         self.stds = stds
@@ -83,14 +83,16 @@ class GPEmulator:
     def from_parameters(cls, params):
         device = params["device"]
         parameters, means, stds = cls.load_samples(
-            params["samples_path"], time_stamps=params["time_stamps"], device=device
+            params["emulator_configuration"]["samples_path"],
+            time_stamps=params["emulator_configuration"]["time_stamps"],
+            device=device,
         )
         return cls(
             parameters=parameters,
             means=means,
             stds=stds,
             device=device,
-            save_path=params["save_path"],
+            save_path=params["emulator_configuration"]["save_path"],
         )
 
     @classmethod
@@ -108,11 +110,12 @@ class GPEmulator:
         parameters = samples["parameters"].float().to(device)
         means = samples["means"][:, time_stamps].float().to(device)
         stds = samples["stds"][:, time_stamps].float().to(device)
-        return train_x, train_y
+        return parameters, means, stds
 
     def _init_emulators(self):
         ret = {"means": [], "stds": []}
-        for i in range(train_y.shape[-1]):
+        assert self.means.shape == self.stds.shape
+        for i in range(self.means.shape[-1]):
             mean_emulator = ExactGPModel(
                 self.parameters, self.means[:, i], device=self.device
             )
@@ -121,18 +124,23 @@ class GPEmulator:
                 self.parameters, self.stds[:, i], device=self.device
             )
             ret["stds"].append(std_emulator)
+        return ret
 
     def forward(self, x):
-        ret = {"means": [], "stds": []}
+        ret = {"means": torch.zeros(0,1), "stds": torch.zeros(0,1)}
         for key in self.emulators:
             for emulator in self.emulators[key]:
-                ret[key].append(emulator(x))
+                pred = emulator.likelihood(emulator(x))[0].loc.flatten()
+                ret[key] = torch.vstack((ret[key], pred))
+                # ret[key].append(emulator(x))
         return ret
 
     def train_emulators(self, optimizer=None, max_training_iter=100):
         for key in self.emulators:
             for emulator in self.emulators[key]:
-                emulator.train(optimizer=optimizer, max_training_iter=max_training_iter)
+                emulator.train_emulator(
+                    optimizer=optimizer, max_training_iter=max_training_iter
+                )
 
     def set_eval(self):
         for key in self.emulators:
@@ -141,4 +149,4 @@ class GPEmulator:
 
     def save(self):
         with open(self.save_path, "wb") as f:
-            pickle.dump(self)
+            pickle.dump(self, f)

@@ -1,13 +1,13 @@
 from abc import ABC
 import pandas as pd
 import yaml
+import pickle
 import torch
 from pathlib import Path
 import pyro.distributions as dist
 
 from torch_june import Runner
 from torch_june_inference.utils import read_device
-from torch_june_inference.emulation import GPEmulator
 
 
 class InferenceEngine(ABC):
@@ -53,11 +53,12 @@ class InferenceEngine(ABC):
         data_observable = parameters["data"]["observable"]
         emulator_params = parameters["emulator"]
         if emulator_params.get("use_emulator", False):
-            emulator_state_path = emulator_params["emulator_path"]
-            with open(emulator_params["emulator_config_path"], "r") as f:
-                emulator_params = yaml.safe_load(f)
-            emulator_params["device"] = parameters["device"]
-            emulator = cls.load_emulator(emulator_params, emulator_state_path)
+            emulator = pickle.load(open(emulator_params["emulator_path"], "rb"))
+            #emulator_state_path = emulator_params["emulator_path"]
+            #with open(emulator_params["emulator_config_path"], "r") as f:
+            #    emulator_params = yaml.safe_load(f)
+            #emulator_params["device"] = parameters["device"]
+            #emulator = cls.load_emulator(emulator_params, emulator_state_path)
         else:
             emulator = None
         inference_configuration = parameters.get("inference_configuration", {})
@@ -94,11 +95,11 @@ class InferenceEngine(ABC):
         # ).float()
         return ret
 
-    @classmethod
-    def load_emulator(cls, emulator_params, emulator_state_path):
-        emulator = GPEmulator.from_parameters(emulator_params)
-        emulator.restore_state(emulator_state_path)
-        return emulator
+    #@classmethod
+    #def load_emulator(cls, emulator_params, emulator_state_path):
+    #    emulator = GPEmulator.from_parameters(emulator_params)
+    #    emulator.restore_state(emulator_state_path)
+    #    return emulator
 
     def _set_initial_parameters(self):
         names_to_save = []
@@ -113,17 +114,16 @@ class InferenceEngine(ABC):
 
     def evaluate_emulator(self, samples):
         with torch.no_grad():
-            test_x = torch.tensor(
+            x = torch.tensor(
                 [samples[key] for key in samples],
                 device=self.device,
             ).reshape(1, -1)
-            observed_pred = self.emulator.likelihood(self.emulator(test_x))
-            mean = observed_pred.mean
-            lower, upper = observed_pred.confidence_region()
-        res = mean.flatten()
-        error_emulator = (abs(res - lower) + abs(res - upper)) / 2
-        error = error_emulator.flatten()
-        return res, error
+            pred = self.emulator(x)
+            mean = pred["means"].flatten()
+            std = pred["stds"].flatten()
+        #error_emulator = (abs(res - lower) + abs(res - upper)) / 2
+        #error = error_emulator.flatten()
+        return mean, std
 
     def evaluate_model(self, samples):
         with torch.no_grad():
@@ -131,7 +131,7 @@ class InferenceEngine(ABC):
             for key in self.priors:
                 value = samples[key]
                 state_dict[key].copy_(value)
-        results = self.runner.run()
+        results = self.runner()
         return results, 0.0
 
     def evaluate(self, samples):

@@ -19,7 +19,8 @@ class Pyro(InferenceEngine):
         )
         for key in self.data_observable:
             time_stamps = self.data_observable[key]["time_stamps"]
-            data = y[key][time_stamps]
+            #data = y[key]
+            data = y
             data_obs = y_obs[key][time_stamps]
             #print(f"data {data}")
             #print(f"data_obs {data_obs}")
@@ -28,7 +29,7 @@ class Pyro(InferenceEngine):
             #print("----")
             pyro.sample(
                 key,
-                likelihood_fn(data, rel_error * data),
+                likelihood_fn(data, 2*model_error),
                 obs=data_obs,
             )
 
