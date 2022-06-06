@@ -63,13 +63,13 @@ def get_runner(june_config, scope="session"):
 
 @fixture(name="runner_results")
 def get_runner_results(runner, scope="session"):
-    results = runner.run()
+    results = runner()
     runner.save_results(results)
     return results
 
 
 @fixture(name="june_results_path")
 def get_runner_results_path(runner, scope="session"):
-    results = runner.run()
+    results = runner()
     runner.save_results(results)
     return runner.save_path / "results.csv"

@@ -28,7 +28,7 @@ class GradientDescent(InferenceEngine):
             optimizer.zero_grad()
 
             # forward + backward + optimize
-            y = self.runner.run()
+            y = self.runner()
             loss = torch.zeros(1, requires_grad=True, device=self.device)
             for key in self.data_observable:
                 time_stamps = self.data_observable[key]["time_stamps"]
