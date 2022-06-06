@@ -1,7 +1,7 @@
-n_samples: 250
+n_samples: 5
+n_samples_per_parameter: 3
 parameters_to_vary:
-  infection_passing.log_beta_household: [-1,1]
-
+  infection_networks.networks.household.log_beta: [-1,1]
 
 june_configuration_file: "/Users/arnull/code/torch_june_inference/configs/june_config.yaml"
 save_path: "/Users/arnull/code/torch_june_inference/data/samples.pkl"

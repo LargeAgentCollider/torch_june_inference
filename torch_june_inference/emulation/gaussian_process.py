@@ -9,75 +9,21 @@ import gpytorch
 from torch_june_inference.utils import read_device
 
 
-class GPEmulator(gpytorch.models.ExactGP):
-    def __init__(
-        self,
-        train_x,
-        train_y,
-        likelihood=None,
-        device="cpu",
-        save_path="./emulator.path",
-    ):
-        n_tasks = train_y.shape[-1]
-        if likelihood is None:
-            likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(
-                num_tasks=n_tasks
-            )
-        super(GPEmulator, self).__init__(train_x, train_y, likelihood)
-        self.likelihood = likelihood.to(device)
-        self.mean_module = gpytorch.means.MultitaskMean(
-            gpytorch.means.LinearMean(train_y.shape[1]), num_tasks=n_tasks
-        )
-        self.covar_module = gpytorch.kernels.MultitaskKernel(
-            gpytorch.kernels.RBFKernel(
-                length_scale_constraint=gpytorch.constraints.GreaterThan(0.001)
-            ),
-            num_tasks=n_tasks,
-            rank=1,
-        )
-        self.train_x = train_x
-        self.train_y = train_y
-        self.save_path = save_path
-        self.device = device
+class ExactGPModel(gpytorch.models.ExactGP):
+    def __init__(self, train_x, train_y, likelihood, device):
+        super(ExactGPModel, self).__init__(train_x, train_y, likelihood)
+        self.mean_module = gpytorch.means.ConstantMean()
+        self.covar_module = gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel())
         self.to(device)
-
-    @classmethod
-    def from_parameters(cls, params):
-        device = params["device"]
-        train_x, train_y = cls.load_samples(
-            params["samples_path"], time_stamps=params["time_stamps"], device=device
-        )
-        return cls(
-            train_x=train_x,
-            train_y=train_y,
-            device=device,
-            save_path=params["save_path"],
-        )
-
-    @classmethod
-    def from_file(cls, fpath):
-        with open(fpath, "r") as f:
-            params = yaml.safe_load(f)
-        # reads mpi setup
-        params["device"] = read_device(params["device"])
-        return cls.from_parameters(params)
-
-    @classmethod
-    def load_samples(cls, fpath, time_stamps, device):
-        with open(fpath, "rb") as f:
-            samples = pickle.load(f)
-        train_x = samples["samples_x"].float().to(device)
-        train_y = samples["samples_y"][:, time_stamps].float().to(device)
-        return train_x, train_y
-
-    def restore_state(self, fpath):
-        state_dict = torch.load(fpath)
-        self.load_state_dict(state_dict)
 
     def forward(self, x):
         mean_x = self.mean_module(x)
         covar_x = self.covar_module(x)
-        return gpytorch.distributions.MultitaskMultivariateNormal(mean_x, covar_x)
+        return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
+
+    def restore_state(self, fpath):
+        state_dict = torch.load(fpath)
+        self.load_state_dict(state_dict)
 
     def train_emulator(self, optimizer=None, max_training_iter=100):
         self.train()
@@ -91,7 +37,6 @@ class GPEmulator(gpytorch.models.ExactGP):
             # Zero gradients from previous iteration
             optimizer.zero_grad()
             # Output from model
-            print(self.train_x)
             output = self(self.train_x)
             # Calc loss and backprop gradients
             loss = -mll(output, self.train_y)
@@ -111,5 +56,90 @@ class GPEmulator(gpytorch.models.ExactGP):
         self.eval()
         self.likelihood.eval()
 
+
+class GPEmulator:
+    def __init__(
+        self,
+        parameters,
+        means,
+        stds,
+        likelihood=None,
+        device="cpu",
+        save_path="./emulator.pkl",
+    ):
+        self.n_emulators = train_y.shape[-1]
+        self.likelihood = likelihood
+        self.parameters = parameters
+        self.means = means
+        self.stds = stds
+        self.save_path = save_path
+        self.device = device
+        self.emulators = self._init_emulators()
+
+    @classmethod
+    def from_parameters(cls, params):
+        device = params["device"]
+        parameters, means, stds = cls.load_samples(
+            params["samples_path"], time_stamps=params["time_stamps"], device=device
+        )
+        return cls(
+            parameters=parameters,
+            means=means,
+            stds=stds,
+            device=device,
+            save_path=params["save_path"],
+        )
+
+    @classmethod
+    def from_file(cls, fpath):
+        with open(fpath, "r") as f:
+            params = yaml.safe_load(f)
+        # reads mpi setup
+        params["device"] = read_device(params["device"])
+        return cls.from_parameters(params)
+
+    @classmethod
+    def load_samples(cls, fpath, time_stamps, device):
+        with open(fpath, "rb") as f:
+            samples = pickle.load(f)
+        parameters = samples["parameters"].float().to(device)
+        means = samples["means"][:, time_stamps].float().to(device)
+        stds = samples["stds"][:, time_stamps].float().to(device)
+        return train_x, train_y
+
+    def _init_emulators(self):
+        ret = {"means": [], "stds": []}
+        for i in range(train_y.shape[-1]):
+            if self.likelihood is None:
+                likelihood = gpytorch.likelihoods.GaussianLikelihood()
+            mean_emulator = ExactGPModel(
+                self.parameters, self.means[:, i], likelihood, device=self.device
+            )
+            ret["means"].append(mean_emulator)
+            if self.likelihood is None:
+                likelihood = gpytorch.likelihoods.GaussianLikelihood()
+            std_emulator = ExactGPModel(
+                self.parameters, self.stds[:, i], likelihood, device=self.device
+            )
+            ret["stds"].append(std_emulator)
+
+    def forward(self, x):
+        ret = {"means": [], "stds": []}
+        for key in self.emulators:
+            for emulator in self.emulators[key]:
+                ret[key].append(emulator(x))
+        return ret
+
+    def train_emulators(self, optimizer=None, max_training_iter=100):
+        for key in self.emulators:
+            for emulator in self.emulators[key]:
+                emulator.train(optimizer=optimizer, max_training_iter=max_training_iter)
+
+    def set_eval(self):
+        for key in self.emulators:
+            for emulator in self.emulators[key]:
+                emulator.set_eval()
+
     def save(self):
-        torch.save(self.state_dict(), self.save_path)
+        with open(self.save_path, "wb") as f:
+            pickle.dump(self)

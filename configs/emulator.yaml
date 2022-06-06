@@ -4,8 +4,7 @@ device: "cpu"
 
 june_configuration_file: "/Users/arnull/code/torch_june_inference/configs/june_config.yaml"
 
-save_path: "data/emulator.path"
-
-time_stamps: [-1]
-
-samples_path: "/Users/arnull/code/torch_june_inference/data/samples.pkl"
+emulator_configuration:
+  time_stamps: [-1]
+  save_path: "data/emulator.path"
+  samples_path: "/Users/arnull/code/torch_june_inference/data/samples.pkl"

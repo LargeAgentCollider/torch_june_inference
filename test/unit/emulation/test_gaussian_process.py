@@ -4,7 +4,6 @@ import numpy as np
 
 from torch_june_inference.emulation import GPEmulator
 
-
 class TestGPEmulation:
     @pytest.fixture(name="data")
     def make_data(self):
