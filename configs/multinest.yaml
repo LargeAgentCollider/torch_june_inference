@@ -3,7 +3,7 @@ title: MultiNest example configuration file.
 device: "cuda:0"
 june_configuration_file: "/home/arnau/code/torch_june_inference/configs/june_config.yaml"
 
-results_path: "./test_multinest"
+results_path: "./test_multinest_model"
 
 parameters_to_fit:
   infection_networks.networks.household.log_beta:
@@ -30,7 +30,7 @@ data:
       error: 0.002
 
 emulator:
-  use_emulator: yes
+  use_emulator: no
   emulator_path: "./data/emulator.pkl"
 
 inference_configuration:
