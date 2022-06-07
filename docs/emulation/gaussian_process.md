@@ -92,7 +92,7 @@ emulator_means = np.array(emulator_means)
 emulator_stds = np.array(emulator_stds)
 ```
 
-![](/home/arnau/code/torch_june_inference/docs/images/emulation/emulator.png)
+![](../images/emulation/emulator.png)
 
 
 

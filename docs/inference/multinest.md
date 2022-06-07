@@ -58,7 +58,7 @@ plt.plot(likelihood)
 plt.show()
 ```
 
-![](/home/arnau/code/torch_june_inference/docs/images/inference/multinest_likelihood.png)
+![](../images/inference/multinest_emulator_likelihood.png)
 
 
 
@@ -71,4 +71,8 @@ f = corner.corner(lp, labels = names, smooth=2, truths=true_values, weights=weig
 
 ```
 
-![](/home/arnau/code/torch_june_inference/docs/images/inference/multinest_corner.png)
+![](../images/inference/multinest_emulator_corner.png)
+
+![](../images/inference/multinest_model_likelihood.png)
+
+![](../images/inference/multinest_model_corner.png)
