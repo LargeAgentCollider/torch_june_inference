@@ -131,7 +131,7 @@ likelihood = np.abs(np.loadtxt(prefix + &quot;.txt&quot;)[:,1])
 plt.plot(likelihood)
 plt.show()
 </code></pre>
-<p><img alt="" src="/home/arnau/code/torch_june_inference/docs/images/inference/multinest_likelihood.png" /></p>
+<p><img alt="" src="../../images/inference/multinest_emulator_likelihood.png" /></p>
 <pre><code class="language-python">lp = np.loadtxt(prefix + &quot;.txt&quot;)[:,2:]
 weights = np.loadtxt(prefix + &quot;.txt&quot;)[:,0]
 
@@ -139,7 +139,9 @@ names = [param.split(&quot;_&quot;)[-1] for param in parameters]
 f = corner.corner(lp, labels = names, smooth=2, truths=true_values, weights=weights, show_titles=True, bins=30)
 
 </code></pre>
-<p><img alt="" src="/home/arnau/code/torch_june_inference/docs/images/inference/multinest_corner.png" /></p>
+<p><img alt="" src="../../images/inference/multinest_emulator_corner.png" /></p>
+<p><img alt="" src="../../images/inference/multinest_model_likelihood.png" /></p>
+<p><img alt="" src="../../images/inference/multinest_model_corner.png" /></p>
               
             </div>
           </div><footer>

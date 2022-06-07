@@ -157,13 +157,13 @@ dfs.plot(ax=ax[1], title=&quot;Samples&quot;, legend=False)
 ax[0].legend(loc=&quot;center left&quot;, bbox_to_anchor=(2.2,0.5))
 plt.show()
 </code></pre>
-<p><img alt="" src="/home/arnau/code/torch_june_inference/docs/images/inference/pyro_chain.png" /></p>
+<p><img alt="" src="../../images/inference/pyro_chain.png" /></p>
 <p>Finally, we can use <a href="https://corner.readthedocs.io/en/latest/index.html">corner.py</a> to plot our posterior estimates</p>
 <pre><code class="language-python">import corner
 f = corner.corner(dfs.values, labels = labels, smooth=2, truths=true_values, bins=25, show_titles=True)
 </code></pre>
 <p>where we see that our estimates agree with the values in the original <code>june_config.yaml</code> file :).</p>
-<p><img alt="pyro_chain" src="/home/arnau/code/torch_june_inference/docs/images/inference/pyro_posteriors.png" /></p>
+<p><img alt="pyro_chain" src="../../images/inference/pyro_posteriors.png" /></p>
               
             </div>
           </div><footer>
