@@ -1,7 +1,7 @@
 title: Torch June default configuration file.
 
 system:
-  device: cuda:0
+  device: cpu
   random_seed: random
 
     #data_path: '@torch_june/test/data/data.pkl'

@@ -1,10 +1,10 @@
-n_samples: 50
-n_samples_per_parameter: 10
+n_samples: 10
+n_samples_per_parameter: 2
 parameters_to_vary:
   infection_networks.networks.household.log_beta: [-2,2]
     #infection_networks.networks.company.log_beta: [-2,2]
     #infection_networks.networks.school.log_beta: [-2,2]
 
-june_configuration_file: "/home/arnau/code/torch_june_inference/configs/june_config.yaml"
-save_path: "/home/arnau/code/torch_june_inference/data/samples_1d.pkl"
+june_configuration_file: "./configs/june_config.yaml"
+save_path: "./data/samples_1d.pkl"
 

@@ -1,11 +1,15 @@
 import torch
 import yaml
 import pickle
+import numpy as np
 from tqdm import tqdm
 from pyDOE import lhs
 
 from torch_june import Runner
-from torch_june_inference.mpi_setup import mpi_rank, mpi_size, mpi_comm
+from torch_june.utils import fix_seed
+from torch_june_inference.mpi_setup import mpi_rank, mpi_size, mpi_comm, MPI
+
+fix_seed(0)
 
 
 class SampleGenerator:
@@ -76,10 +80,6 @@ class SampleGenerator:
                 stds = torch.std(results_array, 0)
             else:
                 stds = torch.vstack((stds, torch.std(results_array, 0)))
-        # parameters = parameters.cpu().numpy()
-        # means = means.cpu().numpy()
-        # mpi_comm.Barrier()
-
         return parameters, means, stds
 
     def run_model(self, sample_x):
@@ -95,5 +95,25 @@ class SampleGenerator:
     def run(self):
         parameters = self.sample_parameters()
         parameters, means, stds = self.run_models(parameters)
+        parameters = parameters.cpu().numpy()
+        means = means.cpu().numpy()
+        stds = stds.cpu().numpy()
+        mpi_comm.Barrier()
+        for i in range(1, mpi_size):
+            if mpi_rank != i:
+                continue
+            mpi_comm.send(
+                {"parameters": parameters, "means": means, "stds": stds}, dest=0, tag=i
+            )
+        if mpi_rank == 0:
+            for i in range(1, mpi_size):
+                data = mpi_comm.recv(source=i, tag=i)
+                parameters = np.concatenate((parameters, data["parameters"]))
+                means = np.concatenate((means, data["means"]))
+                stds = np.concatenate((stds, data["stds"]))
+            assert len(parameters) == self.n_samples
+            self.save_samples(parameters, means, stds)
+
+    def save_samples(self, parameters, means, stds):
         with open(self.save_path, "wb") as f:
-            pickle.dump({"parameters": parameters, "means": means, "stds" : stds}, f)
+            pickle.dump({"parameters": parameters, "means": means, "stds": stds}, f)
