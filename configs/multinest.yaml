@@ -16,6 +16,11 @@ parameters_to_fit:
       dist: Normal
       loc: 0.1
       scale: 0.1
+  infection_networks.networks.school.log_beta:
+    prior:
+      dist: Normal
+      loc: 0.1
+      scale: 0.1
 
 data:
   observed_data: "./june_example/results.csv"
@@ -25,7 +30,7 @@ data:
       error: 0.002
 
 emulator:
-  use_emulator: false
+  use_emulator: yes
   emulator_path: "./data/emulator.pkl"
 
 inference_configuration:

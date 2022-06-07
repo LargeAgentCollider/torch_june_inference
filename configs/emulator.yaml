@@ -7,4 +7,4 @@ june_configuration_file: "/home/arnau/code/torch_june_inference/configs/june_con
 emulator_configuration:
   time_stamps: [-1]
   save_path: "data/emulator.pkl"
-  samples_path: "/home/arnau/code/torch_june_inference/data/samples_1d.pkl"
+  samples_path: "/home/arnau/code/torch_june_inference/data/samples.pkl"

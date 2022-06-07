@@ -86,7 +86,7 @@ ax[0].legend(loc="center left", bbox_to_anchor=(2.2,0.5))
 plt.show()
 ```
 
-![](/home/arnau/code/torch_june_inference/docs/images/emulation/pyro_chain.png)
+![](/home/arnau/code/torch_june_inference/docs/images/inference/pyro_chain.png)
 
 Finally, we can use [corner.py](https://corner.readthedocs.io/en/latest/index.html) to plot our posterior estimates
 
@@ -97,4 +97,4 @@ f = corner.corner(dfs.values, labels = labels, smooth=2, truths=true_values, bin
 
 where we see that our estimates agree with the values in the original `june_config.yaml` file :).
 
-![pyro_chain](/home/arnau/code/torch_june_inference/docs/images/emulation/pyro_posteriors.png)
+![pyro_chain](/home/arnau/code/torch_june_inference/docs/images/inference/pyro_posteriors.png)

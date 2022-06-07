@@ -49,7 +49,7 @@ networks:
   company:
     log_beta: 0.3
   school:
-    log_beta: 0.4
+    log_beta: 0.2
   pub:
     log_beta: -0.5
   gym:
