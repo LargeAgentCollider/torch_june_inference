@@ -2,4 +2,10 @@ site_name: TorchJune Inference
 site_url: https://arnauqb.github.io/torch_june_inference/
 nav:
   - Home: index.md
+  - Emulation: 
+    - emulation/gaussian_process.md
+  - Inference: 
+    - inference/gradient_descent.md
+    - inference/hmc.md
+    - inference/multinest.md
 theme: readthedocs
