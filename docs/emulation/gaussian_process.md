@@ -98,6 +98,5 @@ emulator_stds = np.array(emulator_stds)
 
 
 
-![pyro_chain](/home/arnau/code/torch_june_inference/docs/images/emulation/pyro_chain.png)
 
-![pyro_chain](/home/arnau/code/torch_june_inference/docs/images/emulation/pyro_posteriors.png)
+
