@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://arnauqb.github.io/torch_june_inference/emulation/gaussian_process/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Gaussian Process Emulation - TorchJune Inference</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Gaussian Process Emulation";
+        var mkdocs_page_input_path = "emulation/gaussian_process.md";
+        var mkdocs_page_url = "/torch_june_inference/emulation/gaussian_process/";
+      </script>
+    
+    <script src="../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> TorchJune Inference
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">TorchJune Inference</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li><li>Gaussian Process Emulation</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="gaussian-process-emulation">Gaussian Process Emulation</h1>
+<p>We can use Gaussian Processes as a powerful regression technique that helps us scan the parameter space in a very efficient way.</p>
+<p>The code package we use is <a href="https://gpytorch.ai/">GPyTorch</a>. The first step we need to do is generate samples for the training.</p>
+<h2 id="1-generating-samples">1. Generating samples</h2>
+<p>To configure the <code>SampleGenerator</code> class, we need to specify which parameters to vary, within which range, the number of samples per parameter, and the total number of parameters. An example of a configuration file can be found in <code>configs/sample_generator.yaml</code> :</p>
+<pre><code class="language-yaml">n_samples: 50
+n_samples_per_parameter: 10
+parameters_to_vary:
+  infection_networks.networks.household.log_beta: [-2,2]
+
+june_configuration_file: &quot;./configs/june_config.yaml&quot;
+save_path: &quot;./data/samples.pkl&quot;
+
+</code></pre>
+<p>Which can then be run using the script <code>scripts/generate_samples.py</code> like this:</p>
+<pre><code class="language-bash">python generate_samples.py configs/sample_generator.yaml
+</code></pre>
+<p>The parameter <code>n_samples</code> specifies the number of parameters to sample from the latin hyper-cube, while <code>n_samples_per_parameter</code> specifies how many repetitions of a single parameter to make. The results that are stored correspond to the mean and standard deviation of this set of repetitions. </p>
+<p>The <code>parameters_to_vary</code> section describes what parameter to range and within which range. Note that only interval ranges are currently supported, since we do the sampling from a latin hyper-cube. It is important that the name of the parameters correspond to the path to the specific parameter in the source code, following PyTorch convention for naming model parameters. All parameters that are not specified will be fixed to the values specified in the <code>june_configuration_file</code>.</p>
+<p>Finally, the samples will be saved as a pickle file in <code>save_path</code>. The pickle file contains a dictionary with 3 fields:</p>
+<pre><code class="language-python">import pickle
+samples_dictionary = pickle.load(open(&quot;./data/samples.pkl&quot;, &quot;rb&quot;))
+samples_dictionary.keys() # returns [&quot;parameters&quot;, &quot;means&quot;, &quot;stds&quot;]
+</code></pre>
+<p>The samples dictionary contains the parameters varied and the means and standard deviations obtained for those parameters. We currently only support emulating the number of cases per time-step but this will change.</p>
+<h2 id="2-training-the-emulator">2. Training the emulator</h2>
+<p>Once we have a <code>samples.pkl</code> file, we can setup the emulators for training. We train two emulators per data point: one emulates the mean of the value of interested and the other one emulates the standard deviation. The goal is for the latter to capture the stochastic of the model correctly.</p>
+<p>An example of a configuration file for the emulator training can be found in <code>configs/emulator.yaml</code>:</p>
+<pre><code class="language-yaml">title: Emulator example configuration file.
+
+device: &quot;cuda:0&quot;
+
+june_configuration_file: &quot;/home/arnau/code/torch_june_inference/configs/june_config.yaml&quot;
+
+emulator_configuration:
+  time_stamps: [-1]
+  save_path: &quot;data/emulator.pkl&quot;
+  samples_path: &quot;/home/arnau/code/torch_june_inference/data/samples.pkl&quot;
+
+</code></pre>
+<p>The <code>device</code> parameter allows us to specify the device to use, either CPU or GPU. The <code>june_configuration_file</code> is the baseline configuration for June, so all non-varying parameters can be fixed. In the <code>emulator_configuration</code> section, we can specify which <code>time_stamps</code> of the time series to emulate, where to save our  trained emulator, and the path to the generated samples. The emulator can then be trained doing</p>
+<pre><code class="language-bash">python scripts/train_emulator.py configs/emulator.yaml
+</code></pre>
+<p>Once the emulator is trained, we can load it as</p>
+<pre><code class="language-python">import pickle
+emulator = pickle.load(open(&quot;./data/emulator.pkl&quot;))
+</code></pre>
+<p>And we can compare the predictions to the samples doing:</p>
+<pre><code class="language-python">import gpytorch
+
+emulator.set_eval() # put emulator in evaluation mode
+
+emulator_means = []
+emulator_stds = []
+param_range = torch.linspace(-2, 2, 100).to(device)
+for param in param_range:
+    with torch.no_grad(), gpytorch.settings.fast_pred_var():
+        pp = param.reshape(1,-1)
+        res = emulator(pp)
+    emulator_means.append(res[&quot;means&quot;].item())
+    emulator_stds.append(res[&quot;stds&quot;].item())
+emulator_means = np.array(emulator_means)
+emulator_stds = np.array(emulator_stds)
+</code></pre>
+<p><img alt="" src="/home/arnau/code/torch_june_inference/docs/images/emulation/emulator.png" /></p>
+<p><img alt="pyro_chain" src="/home/arnau/code/torch_june_inference/docs/images/emulation/pyro_chain.png" /></p>
+<p><img alt="pyro_chain" src="/home/arnau/code/torch_june_inference/docs/images/emulation/pyro_posteriors.png" /></p>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme_extra.js" defer></script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
