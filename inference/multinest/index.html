@@ -85,7 +85,61 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="multinest">MultiNest</h1>
-<p>MultiNest is a nested sampling algorithm. The main advantages is that it supports multiprocessing, so if we have a few GPUs available it can be a very suitable option for inference.</p>
+<p><a href="https://arxiv.org/abs/0809.3437">MultiNest</a> is a nested sampling algorithm. The main advantages is that it supports multiprocessing, so if we have a few GPUs available it can be a very suitable option for inference.</p>
+<p>The package we use is <a href="https://github.com/JohannesBuchner/PyMultiNest">PyMultinest</a>.</p>
+<p>The example configuration file can be found in <code>configs/multinest.yaml</code> :</p>
+<pre><code class="language-yaml">title: MultiNest example configuration file.
+
+device: &quot;cuda:0&quot;
+june_configuration_file: &quot;/home/arnau/code/torch_june_inference/configs/june_config.yaml&quot;
+
+results_path: &quot;./test_multinest&quot;
+
+parameters_to_fit:
+  infection_networks.networks.household.log_beta:
+    prior:
+      dist: Normal
+      loc: 0.3
+      scale: 0.1
+  infection_networks.networks.company.log_beta:
+    prior:
+      dist: Normal
+      loc: 0.1
+      scale: 0.1
+
+data:
+  observed_data: &quot;./june_example/results.csv&quot;
+  observable: 
+    cases_per_timestep:
+      time_stamps: [-1]
+      error: 0.002
+
+emulator:
+  use_emulator: false
+  emulator_path: &quot;./data/emulator.pkl&quot;
+
+inference_configuration:
+  likelihood: Normal
+</code></pre>
+<p>Which follows the same conventions as the <a href="" title="./hmc.md">HMC</a> section.</p>
+<p>Similarly to the HMC section, we can choose to use an emulator or not. </p>
+<p>To plot the results, we can do:</p>
+<pre><code class="language-python">prefix = &quot;../test_multinest/multinest&quot;
+parameters = [&quot;household&quot;, &quot;company&quot;, &quot;school&quot;]
+n_params = len(parameters)
+likelihood = np.abs(np.loadtxt(prefix + &quot;.txt&quot;)[:,1])
+plt.plot(likelihood)
+plt.show()
+</code></pre>
+<p><img alt="" src="/home/arnau/code/torch_june_inference/docs/images/inference/multinest_likelihood.png" /></p>
+<pre><code class="language-python">lp = np.loadtxt(prefix + &quot;.txt&quot;)[:,2:]
+weights = np.loadtxt(prefix + &quot;.txt&quot;)[:,0]
+
+names = [param.split(&quot;_&quot;)[-1] for param in parameters]
+f = corner.corner(lp, labels = names, smooth=2, truths=true_values, weights=weights, show_titles=True, bins=30)
+
+</code></pre>
+<p><img alt="" src="/home/arnau/code/torch_june_inference/docs/images/inference/multinest_corner.png" /></p>
               
             </div>
           </div><footer>
