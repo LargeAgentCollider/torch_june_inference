@@ -15,9 +15,7 @@ from torch_june_inference.paths import config_path
 
 def read_pyro_to_scipy(dist, **kwargs):
     if dist == "Uniform":
-        return stats.uniform(
-            loc=kwargs["low"], scale=kwargs["high"] - kwargs["low"]
-        )
+        return stats.uniform(loc=kwargs["low"], scale=kwargs["high"] - kwargs["low"])
     elif dist == "Normal":
         return stats.norm(loc=kwargs["loc"], scale=kwargs["scale"])
     else:
@@ -44,21 +42,33 @@ class MultiNest(InferenceEngine):
 
     def _loglike(self, cube):
         # Set model parameters
-        n_agents = self.runner.n_agents
+        likelihood_fn = getattr(
+            torch.distributions, self.inference_configuration["likelihood"]
+        )
         with torch.no_grad():
-            state_dict = self.runner.model.state_dict()
+            self.runner.reset_model()
+            samples = {}
             for i, key in enumerate(self.priors):
-                state_dict[key].copy_(torch.tensor(cube[i], device=self.device))
-            # Run model
-            self.runner.run()
+                samples[key] = torch.tensor(cube[i], device=self.device)
+            y, model_error = self.evaluate(samples)
             # Compare to data
-            y = self.runner.results[self.data_observable][self.time_stamps] / n_agents
-            y_obs = self.observed_data[self.time_stamps] / n_agents
-            return self.likelihood(y).log_prob(y_obs).sum().cpu().item()
+            ret = 0.0
+            for key in self.data_observable:
+                time_stamps = self.data_observable[key]["time_stamps"]
+                # data = y[key]
+                data = y
+                data_obs = self.observed_data[key][time_stamps]
+                ret += (
+                    likelihood_fn(data, model_error)
+                    .log_prob(data_obs)
+                    .sum()
+                    .cpu()
+                    .item()
+                )
+            return ret
 
     def run(self, **kwargs):
         ndims = len(self.priors)
-        print(ndims)
         result = solve(
             LogLikelihood=self._loglike,
             Prior=self._prior,
@@ -69,16 +79,6 @@ class MultiNest(InferenceEngine):
             resume=False,
             **kwargs,
         )
-        # pymultinest.run(
-        #   self._loglike,
-        #   self._prior,
-        #   ndims,
-        #   outputfiles_basename=(self.results_path / "multinest").as_posix(),
-        #   verbose=True,
-        #   resume=False,
-        #   n_iter_before_update=1,
-        #   **kwargs
-        # )
         self.results = self.save_results()
 
     def save_results(self):

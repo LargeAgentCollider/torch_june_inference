@@ -29,7 +29,7 @@ class Pyro(InferenceEngine):
             #print("----")
             pyro.sample(
                 key,
-                likelihood_fn(data, 2*model_error),
+                likelihood_fn(data, model_error),
                 obs=data_obs,
             )
 

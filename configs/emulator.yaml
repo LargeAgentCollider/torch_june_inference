@@ -1,10 +1,10 @@
 title: Emulator example configuration file.
 
-device: "cpu"
+device: "cuda:0"
 
-june_configuration_file: "/Users/arnull/code/torch_june_inference/configs/june_config.yaml"
+june_configuration_file: "/home/arnau/code/torch_june_inference/configs/june_config.yaml"
 
 emulator_configuration:
   time_stamps: [-1]
   save_path: "data/emulator.pkl"
-  samples_path: "/Users/arnull/code/torch_june_inference/data/samples.pkl"
+  samples_path: "/home/arnau/code/torch_june_inference/data/samples_1d.pkl"

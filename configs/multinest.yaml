@@ -1,32 +1,32 @@
 title: MultiNest example configuration file.
 
-device: "cpu"
-june_configuration_file: "/Users/arnull/code/torch_june_inference/configs/june_config.yaml"
+device: "cuda:0"
+june_configuration_file: "/home/arnau/code/torch_june_inference/configs/june_config.yaml"
 
 results_path: "./test_multinest"
 
 parameters_to_fit:
-  infection_passing.log_beta_household:
+  infection_networks.networks.household.log_beta:
     prior:
-      dist: Uniform
-      low: -0.5
-      high: 0.5
-        #infection_passing.log_beta_company:
-        #  prior:
-        #    dist: Uniform
-        #    low: -0.5
-        #    high: 0.5
-        #infection_passing.log_beta_school:
-        #  prior:
-        #    dist: Uniform
-        #    low: -0.5
-        #    high: 0.5
+      dist: Normal
+      loc: 0.3
+      scale: 0.1
+  infection_networks.networks.company.log_beta:
+    prior:
+      dist: Normal
+      loc: 0.1
+      scale: 0.1
 
 data:
-  observable: cases_per_timestep
-  time_stamps: [-1]
-  observed_data: "/Users/arnull/code/torch_june_inference/example/results.csv"
+  observed_data: "./june_example/results.csv"
+  observable: 
+    cases_per_timestep:
+      time_stamps: [-1]
+      error: 0.002
 
-likelihood:
-  distribution: Normal
-  error: 0.005
+emulator:
+  use_emulator: false
+  emulator_path: "./data/emulator.pkl"
+
+inference_configuration:
+  likelihood: Normal

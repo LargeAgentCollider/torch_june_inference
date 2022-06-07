@@ -127,7 +127,10 @@ class GPEmulator(torch.nn.Module):
         return ret
 
     def forward(self, x):
-        ret = {"means": torch.zeros(0,1), "stds": torch.zeros(0,1)}
+        ret = {
+            "means": torch.zeros((0, 1), device=self.device),
+            "stds": torch.zeros((0, 1), device=self.device),
+        }
         for key in self.emulators:
             for emulator in self.emulators[key]:
                 pred = emulator.likelihood(emulator(x))[0].loc.flatten()
@@ -150,3 +153,10 @@ class GPEmulator(torch.nn.Module):
     def save(self):
         with open(self.save_path, "wb") as f:
             pickle.dump(self, f)
+
+    # def to(self, device):
+    #    for key in self.emulators:
+    #        for emulator in self.emulators[key]:
+    #            emulator.to(device)
+    #            emulator.likelihood.to(device)
+    #    return super().to(device)

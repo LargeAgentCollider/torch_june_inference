@@ -3,6 +3,7 @@ import pandas as pd
 import yaml
 import pickle
 import torch
+import gpytorch
 from pathlib import Path
 import pyro.distributions as dist
 
@@ -54,11 +55,11 @@ class InferenceEngine(ABC):
         emulator_params = parameters["emulator"]
         if emulator_params.get("use_emulator", False):
             emulator = pickle.load(open(emulator_params["emulator_path"], "rb"))
-            #emulator_state_path = emulator_params["emulator_path"]
-            #with open(emulator_params["emulator_config_path"], "r") as f:
+            # emulator_state_path = emulator_params["emulator_path"]
+            # with open(emulator_params["emulator_config_path"], "r") as f:
             #    emulator_params = yaml.safe_load(f)
-            #emulator_params["device"] = parameters["device"]
-            #emulator = cls.load_emulator(emulator_params, emulator_state_path)
+            # emulator_params["device"] = parameters["device"]
+            # emulator = cls.load_emulator(emulator_params, emulator_state_path)
         else:
             emulator = None
         inference_configuration = parameters.get("inference_configuration", {})
@@ -95,8 +96,8 @@ class InferenceEngine(ABC):
         # ).float()
         return ret
 
-    #@classmethod
-    #def load_emulator(cls, emulator_params, emulator_state_path):
+    # @classmethod
+    # def load_emulator(cls, emulator_params, emulator_state_path):
     #    emulator = GPEmulator.from_parameters(emulator_params)
     #    emulator.restore_state(emulator_state_path)
     #    return emulator
@@ -113,16 +114,17 @@ class InferenceEngine(ABC):
         return names_to_save
 
     def evaluate_emulator(self, samples):
-        with torch.no_grad():
-            x = torch.tensor(
-                [samples[key] for key in samples],
-                device=self.device,
-            ).reshape(1, -1)
+        with gpytorch.settings.fast_pred_var():
+            x = (
+                torch.cat([samples[key].reshape(1) for key in samples])
+                .to(torch.float)
+                .reshape(1, -1)
+            )
             pred = self.emulator(x)
             mean = pred["means"].flatten()
             std = pred["stds"].flatten()
-        #error_emulator = (abs(res - lower) + abs(res - upper)) / 2
-        #error = error_emulator.flatten()
+        # error_emulator = (abs(res - lower) + abs(res - upper)) / 2
+        # error = error_emulator.flatten()
         return mean, std
 
     def evaluate_model(self, samples):
@@ -132,7 +134,10 @@ class InferenceEngine(ABC):
                 value = samples[key]
                 state_dict[key].copy_(value)
         results = self.runner()
-        return results, 0.0
+        return (
+            results["cases_per_timestep"][-1],
+            0.025 * results["cases_per_timestep"][-1],
+        )
 
     def evaluate(self, samples):
         if self.emulator:

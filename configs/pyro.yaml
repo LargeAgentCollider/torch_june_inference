@@ -1,6 +1,6 @@
 title: Pyro example configuration file.
 
-device: "cpu"
+device: "cuda:0"
 june_configuration_file: "./configs/june_config.yaml"
 
 results_path: "./pyro_tests"
@@ -8,9 +8,9 @@ results_path: "./pyro_tests"
 inference_configuration:
   kernel: 
     type: NUTS
-    max_tree_depth: 7
+    max_tree_depth: 10
   num_samples: 5000
-  warmup_steps: 200
+  warmup_steps: 500
   likelihood: Normal
 
 parameters_to_fit:
@@ -19,16 +19,16 @@ parameters_to_fit:
       dist: Normal
       loc: 0.3
       scale: 0.1
-        #infection_networks.networks.company.log_beta:
-        #  prior:
-        #    dist: Uniform
-        #    low: -0.25
-        #    high: 0.25
-        #infection_networks.networks.school.log_beta:
-        #  prior:
-        #    dist: Uniform
-        #    low: -0.25
-        #    high: 0.25
+  infection_networks.networks.company.log_beta:
+    prior:
+      dist: Normal
+      loc: 0.1
+      scale: 0.1
+  infection_networks.networks.school.log_beta:
+    prior:
+      dist: Normal
+      loc: 0.1
+      scale: 0.1
 
 emulator:
   use_emulator: true
@@ -37,16 +37,6 @@ emulator:
 
 data:
   observable: 
-    #cases_by_age_18:
-    #  time_stamps: [10, 20, 30]
-    #cases_by_age_25:
-    #  time_stamps: [10, 20, 30]
-    #cases_by_age_65:
-    #  time_stamps: [10, 20, 30]
-    #cases_by_age_80:
-    #  time_stamps: [10, 20, 30]
-    #cases_by_age_100:
-    #  time_stamps: [10, 20, 30]
     cases_per_timestep:
       time_stamps: [-1]
       error: 0.002
