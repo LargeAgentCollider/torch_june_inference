@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://arnauqb.github.io/torch_june_inference/inference/hmc/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Markov Chain Monte Carlo - TorchJune Inference</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Markov Chain Monte Carlo";
+        var mkdocs_page_input_path = "inference/hmc.md";
+        var mkdocs_page_url = "/torch_june_inference/inference/hmc/";
+      </script>
+    
+    <script src="../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> TorchJune Inference
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">TorchJune Inference</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li><li>Markov Chain Monte Carlo</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="markov-chain-monte-carlo">Markov Chain Monte Carlo</h1>
+<p>In this section we describe how to configure and perform MCMC inference with TorchJune.</p>
+<p>We use the <a href="http://pyro.ai/">Pyro</a> programming language to automate the complicated stuff for us.</p>
+<h2 id="1-nuts">1. NUTS</h2>
+<p>An example configuration file can be found in <code>configs/pyro.yaml</code>:</p>
+<pre><code class="language-yaml">title: Pyro example configuration file.
+
+device: &quot;cuda:0&quot;
+june_configuration_file: &quot;./configs/june_config.yaml&quot;
+
+results_path: &quot;./pyro_tests&quot;
+
+inference_configuration:
+  kernel: 
+    type: NUTS
+    max_tree_depth: 10
+  num_samples: 5000
+  warmup_steps: 500
+  likelihood: Normal
+
+parameters_to_fit:
+  infection_networks.networks.household.log_beta:
+    prior:
+      dist: Normal
+      loc: 0.3
+      scale: 0.1
+  infection_networks.networks.company.log_beta:
+    prior:
+      dist: Normal
+      loc: 0.1
+      scale: 0.1
+  infection_networks.networks.school.log_beta:
+    prior:
+      dist: Normal
+      loc: 0.1
+      scale: 0.1
+
+emulator:
+  use_emulator: true
+    #emulator_config_path: &quot;./configs/emulator.yaml&quot;
+  emulator_path: &quot;./data/emulator.pkl&quot;
+
+data:
+  observable: 
+    cases_per_timestep:
+      time_stamps: [-1]
+      error: 0.002
+
+  observed_data: &quot;./june_example/results.csv&quot;
+</code></pre>
+<p>Most of the fields are recognisable from previous sections and they have the same meaning here. The <code>inference_configuration</code> section takes care of the specificity of the MCMC inference engine. In this case we use the <code>NUTS</code> kernel, but we could also use <code>HMC</code>, the <code>max_tree_depth</code> is set to 10. Lower values will lead to much faster inference but it may produce biased results. The <code>warmup_steps</code> denotes the number of burn-in samples to draw, and the <code>num_samples</code> parameter is the number of samples of the MCMC chain. We can also specify the type of likelihood function to use, for now only the <code>Normal</code> distribution is supported.</p>
+<p>The <code>parameters_to_fit</code> section denotes the parameters we want to fit. Note that if we are using an emulator, it is important that we have as many parameters here as the emulator takes as input, in the same order they were sampled. We can specify the prior for each of them, any <a href="https://docs.pyro.ai/en/stable/distributions.html">distribution supported by <code>Pyro</code></a> is allowed. </p>
+<p>We can either do inference using the <code>TorchJune</code> model or a trained emulator. This is configures in the <code>emulator</code> section, where we need to specify the emulator path if we are using one.</p>
+<p>Finally, the <code>data</code> section configures the data we are fitting the model to. We can have multiple observables, at different <code>time_stamps</code> and with different errors. The errors are considered to be Gaussian. Finally the <code>observed_data</code> field is a path to the data file containing a Dataframe where the columns are the observables.</p>
+<p>We can then run Pyro by doing</p>
+<pre><code class="language-bash">python scripts/run_pyro.py configs/pyro.yaml
+</code></pre>
+<p>The MCMC chain can be easily plotted doing</p>
+<pre><code class="language-python">import matplotlib.pyplot as plt
+import pandas as pd
+
+fig, ax = plt.subplots(1, 2, figsize=(10, 4) )
+
+dfw = pd.read_csv(&quot;./pyro_tests/pyro_chain_Warmup.csv&quot;)
+dfs = pd.read_csv(&quot;./pyro_tests/pyro_chain_Sample.csv&quot;)
+
+dfw.plot(ax=ax[0], title=&quot;Warmup&quot;, legend=False)
+dfs.plot(ax=ax[1], title=&quot;Samples&quot;, legend=False)
+ax[0].legend(loc=&quot;center left&quot;, bbox_to_anchor=(2.2,0.5))
+plt.show()
+</code></pre>
+<p><img alt="" src="/home/arnau/code/torch_june_inference/docs/images/emulation/pyro_chain.png" /></p>
+<p>Finally, we can use <a href="https://corner.readthedocs.io/en/latest/index.html">corner.py</a> to plot our posterior estimates</p>
+<pre><code class="language-python">import corner
+f = corner.corner(dfs.values, labels = labels, smooth=2, truths=true_values, bins=25, show_titles=True)
+</code></pre>
+<p>where we see that our estimates agree with the values in the original <code>june_config.yaml</code> file :).</p>
+<p><img alt="pyro_chain" src="/home/arnau/code/torch_june_inference/docs/images/emulation/pyro_posteriors.png" /></p>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme_extra.js" defer></script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

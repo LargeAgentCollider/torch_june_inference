@@ -10,4 +10,19 @@
          <lastmod>2022-06-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
+    <url>
+         <loc>https://arnauqb.github.io/torch_june_inference/inference/gradient_descent/</loc>
+         <lastmod>2022-06-07</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://arnauqb.github.io/torch_june_inference/inference/hmc/</loc>
+         <lastmod>2022-06-07</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://arnauqb.github.io/torch_june_inference/inference/multinest/</loc>
+         <lastmod>2022-06-07</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
 </urlset>
