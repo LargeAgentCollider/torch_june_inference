@@ -8,6 +8,7 @@ from pyDOE import lhs
 from torch_june import Runner
 from torch_june.utils import fix_seed
 from torch_june_inference.mpi_setup import mpi_rank, mpi_size, mpi_comm, MPI
+from torch_june_inference.utils import read_device
 
 fix_seed(0)
 
@@ -30,7 +31,10 @@ class SampleGenerator:
 
     @classmethod
     def from_parameters(cls, params):
-        runner = Runner.from_file(params["june_configuration_file"])
+        device = read_device(params["device"])
+        june_params = yaml.safe_load(open(params["june_configuration_file"]))
+        june_params["system"]["device"] = device
+        runner = Runner.from_parameters(june_params)
         return cls(
             runner=runner,
             n_samples=params["n_samples"],
@@ -64,7 +68,11 @@ class SampleGenerator:
         parameters = parameters[low:high, :]
         means = None
         stds = None
-        for i in tqdm(range(len(parameters))):
+        if mpi_rank == 0:
+            pbar = tqdm(range(len(parameters)))
+        else:
+            pbar = range(len(parameters))
+        for i in pbar:
             results_array = None
             for j in range(self.n_samples_per_parameter):
                 results = self.run_model(parameters[i, :])["cases_per_timestep"]

@@ -1,10 +1,18 @@
-n_samples: 10
-n_samples_per_parameter: 2
+device: cuda:0
+n_samples: 2000
+n_samples_per_parameter: 10
 parameters_to_vary:
   infection_networks.networks.household.log_beta: [-2,2]
-    #infection_networks.networks.company.log_beta: [-2,2]
-    #infection_networks.networks.school.log_beta: [-2,2]
+  infection_networks.networks.company.log_beta: [-2,2]
+  infection_networks.networks.school.log_beta: [-2,2]
+  infection_networks.networks.visit.log_beta: [-2,2]
+  infection_networks.networks.pub.log_beta: [-2,2]
+  infection_networks.networks.gym.log_beta: [-2,2]
+  infection_networks.networks.grocery.log_beta: [-2,2]
+  infection_networks.networks.cinema.log_beta: [-2,2]
+  infection_networks.networks.university.log_beta: [-2,2]
+  infection_networks.networks.care_home.log_beta: [-2,2]
 
 june_configuration_file: "./configs/june_config.yaml"
-save_path: "./data/samples_1d.pkl"
+save_path: "./data/samples.pkl"
 

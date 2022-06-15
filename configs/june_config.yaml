@@ -50,20 +50,20 @@ networks:
     log_beta: 0.3
   school:
     log_beta: 0.2
-  pub:
-    log_beta: -0.5
-  gym:
-    log_beta: -0.5
-  grocery:
-    log_beta: -0.5
   visit:
-    log_beta: -0.5
+    log_beta: 1.0
+  pub:
+    log_beta: 0.5
+  gym:
+    log_beta: 0.5
+  grocery:
+    log_beta: 0.5
   cinema:
-    log_beta: -0.5
+    log_beta: 0.5
   university:
-    log_beta: -0.5
+    log_beta: 0.5
   care_home:
-    log_beta: -0.4
+    log_beta: 0.4
 
 policies:
   interaction:

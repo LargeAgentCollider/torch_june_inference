@@ -3,7 +3,7 @@ title: Pyro example configuration file.
 device: "cuda:0"
 june_configuration_file: "./configs/june_config.yaml"
 
-results_path: "./pyro_tests"
+results_path: "./pyro_4p"
 
 inference_configuration:
   kernel: 
@@ -28,6 +28,11 @@ parameters_to_fit:
     prior:
       dist: Normal
       loc: 0.1
+      scale: 0.1
+  infection_networks.networks.visit.log_beta:
+    prior:
+      dist: Normal
+      loc: 0.7
       scale: 0.1
 
 emulator:

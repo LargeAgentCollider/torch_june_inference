@@ -107,9 +107,15 @@ class GPEmulator(torch.nn.Module):
     def load_samples(cls, fpath, time_stamps, device):
         with open(fpath, "rb") as f:
             samples = pickle.load(f)
-        parameters = samples["parameters"].float().to(device)
-        means = samples["means"][:, time_stamps].float().to(device)
-        stds = samples["stds"][:, time_stamps].float().to(device)
+        parameters = torch.tensor(
+            samples["parameters"], dtype=torch.float, device=device
+        )
+        means = torch.tensor(
+            samples["means"][:, time_stamps], dtype=torch.float, device=device
+        )
+        stds = torch.tensor(
+            samples["stds"][:, time_stamps], dtype=torch.float, device=device
+        )
         return parameters, means, stds
 
     def _init_emulators(self):
