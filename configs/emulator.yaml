@@ -2,7 +2,7 @@ title: Emulator example configuration file.
 
 device: "cuda:0"
 
-june_configuration_file: "./configs/june_config.yaml"
+june_configuration_file: "./configs/june.yaml"
 
 emulator_configuration:
   time_stamps: [-1]

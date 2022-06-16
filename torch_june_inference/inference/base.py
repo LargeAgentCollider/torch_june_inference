@@ -45,6 +45,7 @@ class InferenceEngine(ABC):
 
     @classmethod
     def from_parameters(cls, parameters):
+        device = parameters["device"]
         with open(parameters["june_configuration_file"], "r") as f:
             june_params = yaml.safe_load(f)
         june_params["system"]["device"] = parameters["device"]
@@ -55,6 +56,7 @@ class InferenceEngine(ABC):
         emulator_params = parameters["emulator"]
         if emulator_params.get("use_emulator", False):
             emulator = pickle.load(open(emulator_params["emulator_path"], "rb"))
+            emulator = emulator.to(device)
             # emulator_state_path = emulator_params["emulator_path"]
             # with open(emulator_params["emulator_config_path"], "r") as f:
             #    emulator_params = yaml.safe_load(f)

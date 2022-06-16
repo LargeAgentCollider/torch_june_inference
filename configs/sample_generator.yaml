@@ -13,6 +13,6 @@ parameters_to_vary:
   infection_networks.networks.university.log_beta: [-2,2]
   infection_networks.networks.care_home.log_beta: [-2,2]
 
-june_configuration_file: "./configs/june_config.yaml"
+june_configuration_file: "./configs/june.yaml"
 save_path: "./data/samples.pkl"
 
