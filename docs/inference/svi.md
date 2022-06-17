@@ -61,11 +61,11 @@ data:
 
 The interface is very similar to the [HMC]("./hmc.md") case, so most of the fields do not need explaining. The particularities of the SVI are specified under `inference_configuration`, where we specify the optimizer and the loss function to use.
 
-We assume that the posterior distribution over the parameters is a Normal distribution, with parameters $$\mu$$ and $$\sigma$$. The values of $$\mu$$ and $$\sigma$$ are then found through an optimization problem, where we minimize the ELBO loss:
+We assume that the posterior distribution over the parameters is a Normal distribution, with parameters $\mu$ and $\sigma$. The values of $\mu$ and $\sigma$ are then found through an optimization problem, where we minimize the ELBO loss:
 
 ![elbo_loss](../images/inference/svi_loss.png)
 
-We can then plot the value of $$\mu$$ and $$\sigma$$ for each parameter over the training period:
+We can then plot the value of $\mu$ and $\sigma$ for each parameter over the training period:
 
 ![elbo_loss](../images/inference/svi_mus.png)
 
