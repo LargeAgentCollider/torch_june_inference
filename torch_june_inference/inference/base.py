@@ -137,8 +137,8 @@ class InferenceEngine(ABC):
                 state_dict[key].copy_(value)
         results = self.runner()
         return (
-            results["cases_per_timestep"][-1],
-            0.025 * results["cases_per_timestep"][-1],
+            results,
+            0.025,
         )
 
     def evaluate(self, samples):
