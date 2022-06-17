@@ -3,18 +3,18 @@
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://arnauqb.github.io/torch_june_inference/inference/multinest/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://arnauqb.github.io/torch_june_inference/inference/svi/" />
       <link rel="shortcut icon" href="../../img/favicon.ico" />
-    <title>MultiNest - TorchJune Inference</title>
+    <title>Variational Inference - TorchJune Inference</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
     
       <script>
         // Current page data
-        var mkdocs_page_name = "MultiNest";
-        var mkdocs_page_input_path = "inference/multinest.md";
-        var mkdocs_page_url = "/torch_june_inference/inference/multinest/";
+        var mkdocs_page_name = "Variational Inference";
+        var mkdocs_page_input_path = "inference/svi.md";
+        var mkdocs_page_url = "/torch_june_inference/inference/svi/";
       </script>
     
     <script src="../../js/jquery-3.6.0.min.js" defer></script>
@@ -55,11 +55,11 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../hmc/">Markov Chain Monte Carlo</a>
                   </li>
-                  <li class="toctree-l1 current"><a class="reference internal current" href="./">MultiNest</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../multinest/">MultiNest</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Variational Inference</a>
     <ul class="current">
     </ul>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../svi/">Variational Inference</a>
                   </li>
               </ul>
       </div>
@@ -76,7 +76,7 @@
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li>
-          <li>Inference &raquo;</li><li>MultiNest</li>
+          <li>Inference &raquo;</li><li>Variational Inference</li>
     <li class="wy-breadcrumbs-aside">
     </li>
   </ul>
@@ -86,16 +86,25 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h1 id="multinest">MultiNest</h1>
-<p><a href="https://arxiv.org/abs/0809.3437">MultiNest</a> is a nested sampling algorithm. The main advantages is that it supports multiprocessing, so if we have a few GPUs available it can be a very suitable option for inference.</p>
-<p>The package we use is <a href="https://github.com/JohannesBuchner/PyMultiNest">PyMultinest</a>.</p>
-<p>The example configuration file can be found in <code>configs/multinest.yaml</code> :</p>
-<pre><code class="language-yaml">title: MultiNest example configuration file.
+                <h1 id="variational-inference">Variational Inference</h1>
+<p>Here we describe how to do Variational Inference with TorchJune.</p>
+<p>We again use the <a href="http://pyro.ai/">Pyro</a> programming language to automate the complicated stuff for us.</p>
+<p>An example configuration file can be found in <code>configs/svi.yaml</code>:</p>
+<pre><code class="language-yaml">title: SVI example configuration file.
 
-device: &quot;cuda:0&quot;
-june_configuration_file: &quot;/home/arnau/code/torch_june_inference/configs/june_config.yaml&quot;
+device: &quot;cpu&quot;
+june_configuration_file: &quot;./configs/june.yaml&quot;
 
-results_path: &quot;./test_multinest&quot;
+results_path: &quot;./svi_results&quot;
+
+inference_configuration:
+  optimizer:
+    type: Adam
+    lr: 0.1
+  n_steps: 10000
+  loss:
+    type: Trace_ELBO
+    num_particles: 1
 
 parameters_to_fit:
   infection_networks.networks.household.log_beta:
@@ -108,48 +117,37 @@ parameters_to_fit:
       dist: Normal
       loc: 0.1
       scale: 0.1
+  infection_networks.networks.school.log_beta:
+    prior:
+      dist: Normal
+      loc: 0.1
+      scale: 0.1
+  infection_networks.networks.visit.log_beta:
+    prior:
+      dist: Normal
+      loc: 0.7
+      scale: 0.1
+
+emulator:
+  use_emulator: false 
+    #emulator_config_path: &quot;./configs/emulator.yaml&quot;
+  emulator_path: &quot;./data/emulator.pkl&quot;
 
 data:
-  observed_data: &quot;./june_example/results.csv&quot;
   observable: 
     cases_per_timestep:
       time_stamps: [-1]
       error: 0.002
 
-emulator:
-  use_emulator: false
-  emulator_path: &quot;./data/emulator.pkl&quot;
-
-inference_configuration:
-  likelihood: Normal
+  observed_data: &quot;./june_example/results.csv&quot;
 </code></pre>
-<p>Which follows the same conventions as the <a href="" title="./hmc.md">HMC</a> section.</p>
-<p>Similarly to the HMC section, we can choose to use an emulator or not. </p>
-<p>To plot the results, we can do:</p>
-<pre><code class="language-python">prefix = &quot;../test_multinest/multinest&quot;
-parameters = [&quot;household&quot;, &quot;company&quot;, &quot;school&quot;]
-n_params = len(parameters)
-likelihood = np.abs(np.loadtxt(prefix + &quot;.txt&quot;)[:,1])
-plt.plot(likelihood)
-plt.show()
-</code></pre>
-<p><img alt="" src="../../images/inference/multinest_emulator_likelihood.png" /></p>
-<pre><code class="language-python">lp = np.loadtxt(prefix + &quot;.txt&quot;)[:,2:]
-weights = np.loadtxt(prefix + &quot;.txt&quot;)[:,0]
-
-names = [param.split(&quot;_&quot;)[-1] for param in parameters]
-f = corner.corner(lp, labels = names, smooth=2, truths=true_values, weights=weights, show_titles=True, bins=30)
-
-</code></pre>
-<p><img alt="" src="../../images/inference/multinest_emulator_corner.png" /></p>
-<p><img alt="" src="../../images/inference/multinest_model_likelihood.png" /></p>
-<p><img alt="" src="../../images/inference/multinest_model_corner.png" /></p>
+<p>The interface is very similar to the <a href="" title="./hmc.md">HMC</a> case, so most of the fields do not need explaining. The particularities of the SVI are specified under <code>inference_configuration</code>, where we specify the optimizer and the loss function to use.</p>
+<p>Results are still in progress.</p>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../hmc/" class="btn btn-neutral float-left" title="Markov Chain Monte Carlo"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../svi/" class="btn btn-neutral float-right" title="Variational Inference">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../multinest/" class="btn btn-neutral float-left" title="MultiNest"><span class="icon icon-circle-arrow-left"></span> Previous</a>
     </div>
 
   <hr/>
@@ -172,10 +170,8 @@ f = corner.corner(lp, labels = names, smooth=2, truths=true_values, weights=weig
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../hmc/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../multinest/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
-    
-      <span><a href="../svi/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>
