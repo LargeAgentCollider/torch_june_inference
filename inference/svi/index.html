@@ -142,9 +142,9 @@ data:
   observed_data: &quot;./june_example/results.csv&quot;
 </code></pre>
 <p>The interface is very similar to the <a href="" title="./hmc.md">HMC</a> case, so most of the fields do not need explaining. The particularities of the SVI are specified under <code>inference_configuration</code>, where we specify the optimizer and the loss function to use.</p>
-<p>We assume that the posterior distribution over the parameters is a Normal distribution, with parameters $$\mu$$ and $$\sigma$$. The values of $$\mu$$ and $$\sigma$$ are then found through an optimization problem, where we minimize the ELBO loss:</p>
+<p>We assume that the posterior distribution over the parameters is a Normal distribution, with parameters <span class="arithmatex">\(\mu\)</span> and <span class="arithmatex">\(\sigma\)</span>. The values of <span class="arithmatex">\(\mu\)</span> and <span class="arithmatex">\(\sigma\)</span> are then found through an optimization problem, where we minimize the ELBO loss:</p>
 <p><img alt="elbo_loss" src="../../images/inference/svi_loss.png" /></p>
-<p>We can then plot the value of $$\mu$$ and $$\sigma$$ for each parameter over the training period:</p>
+<p>We can then plot the value of <span class="arithmatex">\(\mu\)</span> and <span class="arithmatex">\(\sigma\)</span> for each parameter over the training period:</p>
 <p><img alt="elbo_loss" src="../../images/inference/svi_mus.png" /></p>
 <p><img alt="elbo_loss" src="../../images/inference/svi_sigmas.png" /></p>
 <p>And finally plot the posteriors:</p>
@@ -184,6 +184,9 @@ data:
     <script>var base_url = '../..';</script>
     <script src="../../js/theme_extra.js" defer></script>
     <script src="../../js/theme.js" defer></script>
+      <script src="../../javascripts/mathjax.js" defer></script>
+      <script src="https://polyfill.io/v3/polyfill.min.js?features=es6" defer></script>
+      <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" defer></script>
       <script src="../../search/main.js" defer></script>
     <script defer>
         window.onload = function () {
