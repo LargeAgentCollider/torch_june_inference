@@ -69,6 +69,8 @@ class SVI(InferenceEngine):
         y = self.runner()
         for key in self.data_observable:
             time_stamps = self.data_observable[key]["time_stamps"]
+            if time_stamps == "all":
+                time_stamps = range(len(y[key]))
             data = y[key][time_stamps]
             data_obs = y_obs[key][time_stamps]
             # print(f"data {data}")
@@ -79,7 +81,7 @@ class SVI(InferenceEngine):
             for i in pyro.plate("plate_obs", len(time_stamps)):
                 pyro.sample(
                     f"obs_{i}",
-                    pyro.distributions.Normal(data[i], 0.15 * data[i]),
+                    pyro.distributions.Normal(data[i], 0.05 * data[i]),
                     # pyro.distributions.Delta(data[i]),
                     obs=data_obs[i],
                 )
@@ -154,9 +156,7 @@ class SVI(InferenceEngine):
         loss = self._get_loss()
         df = self._init_df()
         data = self.observed_data
-        svi = pyro.infer.SVI(
-            self.model_emulator, self.guide_emulator, optimizer, loss=loss
-        )
+        svi = pyro.infer.SVI(self.model, self.guide, optimizer, loss=loss)
         n_steps = self.inference_configuration["n_steps"]
         param_store = pyro.get_param_store()
         for step in tqdm(range(n_steps)):
