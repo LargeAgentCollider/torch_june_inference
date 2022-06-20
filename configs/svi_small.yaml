@@ -12,7 +12,7 @@ inference_configuration:
   n_steps: 10000
   loss:
     type: Trace_ELBO
-    num_particles: 10
+    num_particles: 1
 
 parameters_to_fit:
   infection_networks.networks.household.log_beta:

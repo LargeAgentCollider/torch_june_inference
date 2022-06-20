@@ -81,8 +81,8 @@ class SVI(InferenceEngine):
             for i in pyro.plate("plate_obs", len(time_stamps)):
                 pyro.sample(
                     f"obs_{i}",
-                    pyro.distributions.Normal(data[i], 0.05 * data[i]),
-                    # pyro.distributions.Delta(data[i]),
+                    pyro.distributions.Normal(data[i], 0.005 * data[i]),
+                    #pyro.distributions.Delta(data[i]),
                     obs=data_obs[i],
                 )
 

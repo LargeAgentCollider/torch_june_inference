@@ -138,7 +138,7 @@ class InferenceEngine(ABC):
         results = self.runner()
         return (
             results,
-            0.025,
+            0.0,
         )
 
     def evaluate(self, samples):

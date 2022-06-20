@@ -1,6 +1,7 @@
 import torch
 import pyro
 import pandas as pd
+from pyro.infer import infer_discrete
 
 from torch_june_inference.inference.base import InferenceEngine
 
@@ -19,8 +20,10 @@ class Pyro(InferenceEngine):
         )
         for key in self.data_observable:
             time_stamps = self.data_observable[key]["time_stamps"]
+            if time_stamps == "all":
+                time_stamps = range(len(y[key]))
             #data = y[key]
-            data = y
+            data = y[key][time_stamps]
             data_obs = y_obs[key][time_stamps]
             #print(f"data {data}")
             #print(f"data_obs {data_obs}")
@@ -29,7 +32,7 @@ class Pyro(InferenceEngine):
             #print("----")
             pyro.sample(
                 key,
-                likelihood_fn(data, model_error),
+                likelihood_fn(data, model_error + rel_error * data),
                 obs=data_obs,
             )
 

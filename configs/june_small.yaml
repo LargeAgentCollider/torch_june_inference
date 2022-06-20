@@ -26,7 +26,7 @@ timer:
       - household
 
 infection_seed:
-  n_initial_cases: 5
+  n_initial_cases: 5 
 
 networks:
   household:
