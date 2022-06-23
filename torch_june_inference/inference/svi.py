@@ -47,7 +47,7 @@ class SVI(InferenceEngine):
         self.svi = None
         pyro.nn.module.to_pyro_module_(self.runner)
 
-    def _get_optimizer(self):
+    def _get_scheduler(self):
         config = self.inference_configuration["optimizer"]
         optimizer_type = config.pop("type")
         milestones = config.pop("milestones")
@@ -95,7 +95,7 @@ class SVI(InferenceEngine):
             beta_mu_param = pyro.param(f"beta_mu_{beta_name}", value.loc)
             beta_sigma_param = pyro.param(
                 f"beta_sigma_{beta_name}",
-                value.scale,
+                torch.tensor(0.1),
                 constraint=pyro.distributions.constraints.softplus_positive,
             )
             beta_prior = pyro.distributions.Normal(
@@ -157,17 +157,18 @@ class SVI(InferenceEngine):
         return df
 
     def run(self):
-        optimizer = self._get_optimizer()
+        scheduler = self._get_scheduler()
         loss = self._get_loss()
         df = self._init_df()
         data = self.observed_data
         normal_guide = pyro.infer.autoguide.AutoNormal(self.model)
-        self.svi = pyro.infer.SVI(self.model, normal_guide, optimizer, loss=loss)
+        self.svi = pyro.infer.SVI(self.model, self.guide, scheduler, loss=loss)
         n_steps = self.inference_configuration["n_steps"]
         param_store = pyro.get_param_store()
         for step in tqdm(range(n_steps)):
             loss = self.svi.evaluate_loss(data)
             self.svi.step(data)
+            scheduler.step()
             df.loc[step, "loss"] = loss
             for param in param_store:
                 if "beta" not in param:
