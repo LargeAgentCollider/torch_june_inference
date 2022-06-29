@@ -1,0 +1,37 @@
+title: UltraNest example configuration file.
+
+device: "cpu"
+june_configuration_file: "./configs/june.yaml"
+
+results_path: "./results/ultranest"
+
+parameters_to_fit:
+  infection_networks.networks.household.log_beta:
+    prior:
+      dist: Normal
+      loc: 0.3
+      scale: 0.1
+  infection_networks.networks.company.log_beta:
+    prior:
+      dist: Normal
+      loc: 0.1
+      scale: 0.1
+  infection_networks.networks.school.log_beta:
+    prior:
+      dist: Normal
+      loc: 0.1
+      scale: 0.1
+
+data:
+  observed_data: "./june_example/results.csv"
+  observable: 
+    cases_per_timestep:
+      time_stamps: [-1]
+      error: 0.002
+
+emulator:
+  use_emulator: no
+  emulator_path: "./data/emulator.pkl"
+
+inference_configuration:
+  likelihood: Normal
