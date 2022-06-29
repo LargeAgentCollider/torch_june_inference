@@ -5,12 +5,20 @@ import numpy as np
 from tqdm import tqdm
 from pyDOE import lhs
 
-from torch_june import Runner
+from torch_june import Runner, TorchJune
 from torch_june.utils import fix_seed
 from torch_june_inference.mpi_setup import mpi_rank, mpi_size, mpi_comm, MPI
 from torch_june_inference.utils import read_device
 
 fix_seed(0)
+
+
+def set_attribute(base, path, target):
+    paths = path.split(".")
+    _base = base
+    for p in paths[:-1]:
+        _base = getattr(_base, p)
+    setattr(_base, paths[-1], target)
 
 
 class SampleGenerator:
@@ -28,6 +36,7 @@ class SampleGenerator:
         self.save_path = save_path
         self.n_samples = n_samples
         self.n_samples_per_parameter = n_samples_per_parameter
+        self.set_parameters()
 
     @classmethod
     def from_parameters(cls, params):
@@ -49,6 +58,12 @@ class SampleGenerator:
             params = yaml.safe_load(f)
         # reads mpi setup
         return cls.from_parameters(params)
+
+    def set_parameters(self):
+        for param in self.parameters_to_vary:
+            set_attribute(
+                self.runner.model, param, torch.nn.Parameter(torch.tensor(0.0))
+            )
 
     def sample_parameters(self):
         n_dims = len(self.parameters_to_vary)
@@ -90,8 +105,12 @@ class SampleGenerator:
                 stds = torch.vstack((stds, torch.std(results_array, 0)))
         return parameters, means, stds
 
+    def reset_model(self):
+        self.runner.model = TorchJune.from_parameters(self.runner.parameters)
+        self.set_parameters()
+
     def run_model(self, sample_x):
-        self.runner.reset_model()
+        self.reset_model()
         with torch.no_grad():
             state_dict = self.runner.model.state_dict()
             for i, key in enumerate(self.parameters_to_vary):

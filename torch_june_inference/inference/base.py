@@ -106,14 +106,18 @@ class InferenceEngine(ABC):
 
     def _set_initial_parameters(self):
         names_to_save = []
-        for name, param in self.runner.model.named_parameters():
-            if name in self.priors:
-                names_to_save.append(name)
-                with torch.no_grad():
-                    param.copy_(self.priors[name].sample())
-            else:
-                param.requires_grad = False
+        for param in self.parameters_to_vary:
+            set_attribute(
+                self.runner.model, param, torch.nn.Parameter(torch.tensor(0.0))
+            )
+            names_to_save.append(param)
         return names_to_save
+
+    def set_parameters(self):
+        for param in self.parameters_to_vary:
+            set_attribute(
+                self.runner.model, param, torch.nn.Parameter(torch.tensor(0.0))
+            )
 
     def evaluate_emulator(self, samples):
         with gpytorch.settings.fast_pred_var():

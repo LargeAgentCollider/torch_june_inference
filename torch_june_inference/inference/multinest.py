@@ -50,16 +50,18 @@ class MultiNest(InferenceEngine):
             samples = {}
             for i, key in enumerate(self.priors):
                 samples[key] = torch.tensor(cube[i], device=self.device)
+            print(samples)
             y, model_error = self.evaluate(samples)
             # Compare to data
             ret = 0.0
             for key in self.data_observable:
                 time_stamps = self.data_observable[key]["time_stamps"]
                 # data = y[key]
-                data = y
+                data = y[key][time_stamps]
                 data_obs = self.observed_data[key][time_stamps]
+                rel_error = self.data_observable[key]["error"]
                 ret += (
-                    likelihood_fn(data, model_error)
+                    likelihood_fn(data, rel_error * data)
                     .log_prob(data_obs)
                     .sum()
                     .cpu()
@@ -68,6 +70,8 @@ class MultiNest(InferenceEngine):
             return ret
 
     def run(self, **kwargs):
+        print("Running")
+        self._set_initial_parameters()
         ndims = len(self.priors)
         result = solve(
             LogLikelihood=self._loglike,

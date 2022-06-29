@@ -82,9 +82,10 @@ class SVI(InferenceEngine):
             data = y[key][time_stamps]
             data_obs = y_obs[key][time_stamps]
             rel_error = self.data_observable[key]["error"]
-            for i in pyro.plate("plate_obs", len(time_stamps)):
+            for i in pyro.plate(f"plate_obs_{key}", len(time_stamps)):
                 pyro.sample(
-                    f"obs_{i}",
+                    f"obs_{key}_{i}",
+                    #pyro.distributions.Normal(data[i], 0.05 * data[i]),
                     pyro.distributions.Normal(data[i], rel_error * data[i]),
                     obs=data_obs[i],
                 )
