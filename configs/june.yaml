@@ -7,7 +7,7 @@ system:
 data_path: '@torch_june/test/data/data.pkl'
     #data_path: '../torch_june/worlds/data_london.pkl'
 
-save_path: ./june_example
+save_path: ./results/june
 
 timer:
   total_days: 30

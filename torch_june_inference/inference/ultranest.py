@@ -1,5 +1,7 @@
 import ultranest
 import torch
+import pickle
+from pathlib import Path
 from scipy import stats
 
 from torch_june_inference.inference.base import InferenceEngine
@@ -44,6 +46,8 @@ class UltraNest(InferenceEngine):
             ret = 0.0
             for key in self.data_observable:
                 time_stamps = self.data_observable[key]["time_stamps"]
+                if time_stamps == "all":
+                    time_stamps = range(len(y[key]))
                 # data = y[key]
                 data = y[key][time_stamps]
                 data_obs = self.observed_data[key][time_stamps]
@@ -61,9 +65,12 @@ class UltraNest(InferenceEngine):
         self._set_initial_parameters()
         param_names = list(self.priors.keys())
         sampler = ultranest.ReactiveNestedSampler(
-            param_names, self.likelihood, self.prior_transform, 
+            param_names,
+            self.likelihood,
+            self.prior_transform,
             log_dir=self.results_path.as_posix(),
         )
         results = sampler.run(max_ncalls=1000)
         sampler.print_results()
-        print(results)
+        with open(Path(sampler.logs["run_dir"]) / "results.pkl", "wb") as f:
+            pickle.dump(results, f)
