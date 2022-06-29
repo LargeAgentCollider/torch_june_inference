@@ -18,3 +18,17 @@ def read_device(device):
     if device == "mpi_rank":
         device = f"cuda:{mpi_rank}"
     return device
+
+def get_attribute(base, path):
+    paths = path.split(".")
+    for p in paths:
+        base = getattr(base, p)
+    return base
+
+
+def set_attribute(base, path, target):
+    paths = path.split(".")
+    _base = base
+    for p in paths[:-1]:
+        _base = getattr(_base, p)
+    setattr(_base, paths[-1], target)

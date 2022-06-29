@@ -7,20 +7,6 @@ from tqdm import tqdm
 from torch_june_inference.inference.base import InferenceEngine
 
 
-def get_attribute(base, path):
-    paths = path.split(".")
-    for p in paths:
-        base = getattr(base, p)
-    return base
-
-
-def set_attribute(base, path, target):
-    paths = path.split(".")
-    _base = base
-    for p in paths[:-1]:
-        _base = getattr(_base, p)
-    setattr(_base, paths[-1], target)
-
 
 class SVI(InferenceEngine):
     def __init__(

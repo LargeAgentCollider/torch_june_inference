@@ -4,8 +4,8 @@ system:
   device: cpu
   random_seed: random
 
-    #data_path: '@torch_june/test/data/data.pkl'
-data_path: '../torch_june/worlds/data_london.pkl'
+data_path: '@torch_june/test/data/data.pkl'
+    #data_path: '../torch_june/worlds/data_london.pkl'
 
 save_path: ./june_example
 
@@ -41,7 +41,7 @@ timer:
       - household
 
 infection_seed:
-  n_initial_cases: 1000
+  n_initial_cases: 10
 
 networks:
   household:

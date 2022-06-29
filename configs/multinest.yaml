@@ -1,7 +1,7 @@
 title: MultiNest example configuration file.
 
-device: "cuda:0"
-june_configuration_file: "/home/arnau/code/torch_june_inference/configs/june_config.yaml"
+device: "cpu"
+june_configuration_file: "./configs/june.yaml"
 
 results_path: "./test_multinest_model"
 
