@@ -5,7 +5,8 @@ system:
   random_seed: random
 
     #data_path: '@torch_june/test/data/data.pkl'
-data_path: '../torch_june/worlds/data_small.pkl'
+    #data_path: '../torch_june/worlds/data_small.pkl'
+data_path: '../torch_june/worlds/data_3_areas.pkl'
 
 save_path: ./results/june
 
@@ -21,18 +22,19 @@ timer:
     weekday:
       0:
       - school
+      - household
     weekend:
       0:
       - household
 
 infection_seed:
-  n_initial_cases: 50
+  n_initial_cases: 10
 
 networks:
   household:
-    log_beta: 1.6
+    log_beta: 1.0
   school:
-    log_beta: 1.4
+    log_beta: 0.9
 
 transmission:
   max_infectiousness:

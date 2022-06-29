@@ -5,7 +5,7 @@ from pyro.nn import PyroSample
 from tqdm import tqdm
 
 from torch_june_inference.inference.base import InferenceEngine
-
+from torch_june_inference.utils import set_attribute, get_attribute
 
 
 class SVI(InferenceEngine):
@@ -69,9 +69,11 @@ class SVI(InferenceEngine):
             data_obs = y_obs[key][time_stamps]
             rel_error = self.data_observable[key]["error"]
             for i in pyro.plate(f"plate_obs_{key}", len(time_stamps)):
+                if data[i] == 0:
+                    continue
                 pyro.sample(
                     f"obs_{key}_{i}",
-                    #pyro.distributions.Normal(data[i], 0.05 * data[i]),
+                    # pyro.distributions.Normal(data[i], 0.05 * data[i]),
                     pyro.distributions.Normal(data[i], rel_error * data[i]),
                     obs=data_obs[i],
                 )

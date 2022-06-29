@@ -62,8 +62,8 @@ class UltraNest(InferenceEngine):
         param_names = list(self.priors.keys())
         sampler = ultranest.ReactiveNestedSampler(
             param_names, self.likelihood, self.prior_transform, 
-            log_dir=(self.results_path / "multinest").as_posix(),
+            log_dir=self.results_path.as_posix(),
         )
-        results = sampler.run()
+        results = sampler.run(max_ncalls=1000)
         sampler.print_results()
         print(results)
