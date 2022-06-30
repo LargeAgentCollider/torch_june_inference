@@ -52,6 +52,8 @@ class UltraNest(InferenceEngine):
                 data = y[key][time_stamps]
                 data_obs = self.observed_data[key][time_stamps]
                 rel_error = self.data_observable[key]["error"]
+                data_obs = data_obs[data > 0]
+                data = data[data > 0]
                 ret += (
                     likelihood_fn(data, rel_error * data)
                     .log_prob(data_obs)
@@ -70,7 +72,7 @@ class UltraNest(InferenceEngine):
             self.prior_transform,
             log_dir=self.results_path.as_posix(),
         )
-        results = sampler.run(max_ncalls=1000)
+        results = sampler.run(max_ncalls=10000)
         sampler.print_results()
         with open(Path(sampler.logs["run_dir"]) / "results.pkl", "wb") as f:
             pickle.dump(results, f)

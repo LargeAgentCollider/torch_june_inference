@@ -21,20 +21,18 @@ timer:
   step_activities:
     weekday:
       0:
-      - school
-      - household
+      - visit
+        #- household
     weekend:
       0:
-      - household
+      - visit
 
 infection_seed:
-  n_initial_cases: 10
+  n_initial_cases: 20
 
 networks:
-  household:
-    log_beta: 1.0
-  school:
-    log_beta: 0.9
+  visit:
+    log_beta: 1.6
 
 transmission:
   max_infectiousness:

@@ -84,7 +84,7 @@ class SVI(InferenceEngine):
             beta_mu_param = pyro.param(f"beta_mu_{beta_name}", value.loc)
             beta_sigma_param = pyro.param(
                 f"beta_sigma_{beta_name}",
-                torch.tensor(0.1),
+                torch.tensor(0.01),
                 constraint=pyro.distributions.constraints.softplus_positive,
             )
             beta_prior = pyro.distributions.Normal(
