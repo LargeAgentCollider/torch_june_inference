@@ -58,11 +58,6 @@ class InferenceEngine(ABC):
         if emulator_params.get("use_emulator", False):
             emulator = pickle.load(open(emulator_params["emulator_path"], "rb"))
             emulator = emulator.to(device)
-            # emulator_state_path = emulator_params["emulator_path"]
-            # with open(emulator_params["emulator_config_path"], "r") as f:
-            #    emulator_params = yaml.safe_load(f)
-            # emulator_params["device"] = parameters["device"]
-            # emulator = cls.load_emulator(emulator_params, emulator_state_path)
         else:
             emulator = None
         inference_configuration = parameters.get("inference_configuration", {})
@@ -94,16 +89,7 @@ class InferenceEngine(ABC):
         ret = {}
         for key in df:
             ret[key] = torch.tensor(df[key], device=params["device"], dtype=torch.float)
-        # data = torch.tensor(
-        #     df[data_params["observable"]], device=params["device"]
-        # ).float()
         return ret
-
-    # @classmethod
-    # def load_emulator(cls, emulator_params, emulator_state_path):
-    #    emulator = GPEmulator.from_parameters(emulator_params)
-    #    emulator.restore_state(emulator_state_path)
-    #    return emulator
 
     def _set_initial_parameters(self):
         with torch.no_grad():

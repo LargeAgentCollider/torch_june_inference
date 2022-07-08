@@ -46,15 +46,15 @@ class SVI(InferenceEngine):
             gamma = 1.0
         optimizer_class = getattr(pyro.optim, optimizer_type)
         return optimizer_class(config)
-        #scheduler = pyro.optim.MultiStepLR(
+        # scheduler = pyro.optim.MultiStepLR(
         #    {
         #        "optimizer": optimizer_class,
         #        "optim_args": config,
         #        "milestones": milestones,
         #        "gamma": gamma,
         #    }
-        #)
-        #return scheduler
+        # )
+        # return scheduler
 
     def _get_loss(self):
         config = self.inference_configuration["loss"]
@@ -63,13 +63,13 @@ class SVI(InferenceEngine):
         return loss
 
     def model(self, y_obs):
-        state_dict = self.runner.model.state_dict()
+        runner = self.runner.from_parameters(self.runner.parameters)
         for prior, value in self.priors.items():
             beta_name = prior.split(".")[-2]
             beta = pyro.sample(f"log_beta_{beta_name}", value)
-            #with torch.no_grad():
-            #    state_dict[prior].copy_(beta)
-        y = self.runner()
+            #beta_prior = pyro.nn.PyroSample(value)
+            set_attribute(runner.model, prior, beta)
+        y = runner()
         for key in self.data_observable:
             time_stamps = self.data_observable[key]["time_stamps"]
             if time_stamps == "all":
@@ -82,16 +82,16 @@ class SVI(InferenceEngine):
             for i in pyro.plate(f"plate_obs_{key}", len(time_stamps)):
                 if data[i] == 0:
                     continue
-            #    #error = rel_error * data[i]
+                #    #error = rel_error * data[i]
                 pyro.sample(
                     f"obs_{key}_{i}",
                     pyro.distributions.Normal(data[i], error[i]),
-                    #pyro.distributions.Delta(data[i]),
+                    # pyro.distributions.Delta(data[i]),
                     obs=data_obs[i],
                 )
 
     def guide(self, data):
-        state_dict = self.runner.model.state_dict()
+        runner = self.runner.from_parameters(self.runner.parameters)
         for prior, value in self.priors.items():
             beta_name = prior.split(".")[-2]
             beta_mu_param = pyro.param(f"beta_mu_{beta_name}", value.loc)
@@ -104,51 +104,9 @@ class SVI(InferenceEngine):
                 loc=beta_mu_param, scale=beta_sigma_param
             )
             beta = pyro.sample(f"log_beta_{beta_name}", beta_prior)
-            set_attribute(self.runner.model, prior, beta)
-        y = self.runner()
+            set_attribute(runner.model, prior, beta)
+        y = runner()
         return y
-
-    #def model_emulator(self, y_obs):
-    #    samples = {}
-    #    for prior, value in self.priors.items():
-    #        beta_name = prior.split(".")[-2]
-    #        beta = pyro.sample(f"beta_{beta_name}", value).to(self.device)
-    #        samples[prior] = beta
-    #    y, model_error = self.evaluate_emulator(samples)
-    #    for key in self.data_observable:
-    #        time_stamps = self.data_observable[key]["time_stamps"]
-    #        data = y
-    #        data_obs = y_obs[key][time_stamps]
-    #        rel_error = self.data_observable[key]["error"]
-    #        for i in pyro.plate("plate_obs", len(time_stamps)):
-    #            pyro.sample(
-    #                f"obs_{i}",
-    #                pyro.distributions.Normal(data[i], model_error),
-    #                obs=data_obs[i],
-    #            )
-
-    #def guide_emulator(self, data):
-    #    samples = {}
-    #    for prior, value in self.priors.items():
-    #        beta_name = prior.split(".")[-2]
-    #        beta_mu = torch.randn_like(get_attribute(self.runner.model, prior))
-    #        beta_mu_param = pyro.param(f"beta_mu_{beta_name}", beta_mu)
-    #        beta_sigma = torch.randn_like(get_attribute(self.runner.model, prior))
-    #        # beta_sigma_param = torch.nn.functional.softplus(
-    #        #    pyro.param(f"beta_sigma_{beta_name}", beta_sigma)
-    #        # )
-    #        beta_sigma_param = pyro.param(
-    #            f"beta_sigma_{beta_name}",
-    #            beta_sigma,
-    #            constraint=pyro.distributions.constraints.positive,
-    #        )
-    #        beta_prior = pyro.distributions.Normal(
-    #            loc=beta_mu_param, scale=beta_sigma_param
-    #        )
-    #        beta = pyro.sample(f"beta_{beta_name}", beta_prior).to(self.device)
-    #        samples[prior] = beta
-    #    y, model_error = self.evaluate_emulator(samples)
-    #    return y
 
     def _init_df(self):
         columns = ["loss"]
@@ -170,7 +128,7 @@ class SVI(InferenceEngine):
         for step in tqdm(range(n_steps)):
             loss = self.svi.evaluate_loss(data)
             self.svi.step(data)
-            #scheduler.step()
+            # scheduler.step()
             df.loc[step, "loss"] = loss
             for param in param_store:
                 if "beta" not in param:

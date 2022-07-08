@@ -38,4 +38,7 @@ def set_attribute(base, path, target):
         #    _base = _base[p]
         #else:
         _base = getattr(_base, p)
-    setattr(_base, paths[-1], target)
+    if type(_base) == dict:
+        _base[paths[-1]] = target
+    else:
+        setattr(_base, paths[-1], target)
