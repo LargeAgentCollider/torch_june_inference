@@ -46,22 +46,26 @@ class MultiNest(InferenceEngine):
             torch.distributions, self.inference_configuration["likelihood"]
         )
         with torch.no_grad():
-            self.runner.reset_model()
+            #self.runner.reset_model()
             samples = {}
             for i, key in enumerate(self.priors):
                 samples[key] = torch.tensor(cube[i], device=self.device)
-            print(samples)
             y, model_error = self.evaluate(samples)
             # Compare to data
             ret = 0.0
             for key in self.data_observable:
                 time_stamps = self.data_observable[key]["time_stamps"]
+                if time_stamps == "all":
+                    time_stamps = range(len(y[key]))
                 # data = y[key]
                 data = y[key][time_stamps]
-                data_obs = self.observed_data[key][time_stamps]
                 rel_error = self.data_observable[key]["error"]
+                data_obs = self.observed_data[key][time_stamps]
+                data_sq = torch.pow(data, 2.0)
+                error = rel_error * torch.sqrt(torch.cumsum(data_sq, dim=0))
+                #error = torch.clamp(rel_error * data, min=1e-3)
                 ret += (
-                    likelihood_fn(data, rel_error * data)
+                    likelihood_fn(data, error)
                     .log_prob(data_obs)
                     .sum()
                     .cpu()

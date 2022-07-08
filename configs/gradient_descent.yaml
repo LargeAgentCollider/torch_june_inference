@@ -1,45 +1,42 @@
 title: Gradient descent configuration file.
 
-device: "cpu"
+device: "cuda:2"
 
-june_configuration_file: "./configs/june_config.yaml"
+june_configuration_file: "./configs/june_small.yaml"
 
 results_path: "./results/gradient_descent"
 
 inference_configuration:
   optimizer:
-    type: SGD
-    lr: 0.1
-    momentum: 0.1
-  n_epochs: 10000
+    type: Adam
+    lr: 0.0005
+    betas: [0.95, 0.999]
+    milestones: []
+    gamma: 0.2
+  n_epochs: 100000
   loss:
     type: MSELoss
-    reduction: mean
+    reduction: sum
 
 parameters_to_fit:
   infection_networks.networks.household.log_beta:
     prior:
-      dist: Uniform
-      low: -1.0
-      high: 1.0
+      dist: Normal
+      loc: 1.0
+      scale: 0.5
+  infection_networks.networks.school.log_beta:
+    prior:
+      dist: Normal
+      loc: 1.0
+      scale: 0.5
 
 emulator:
   use_emulator: false
 
 data:
-  observed_data: "./june_example/results.csv"
+  observed_data: "./results/june/results.csv"
   observable: 
-    #cases_by_age_18:
-    #  time_stamps: [10, 20, 30]
-    #cases_by_age_25:
-    #  time_stamps: [10, 20, 30]
-    #cases_by_age_65:
-    #  time_stamps: [10, 20, 30]
-    #cases_by_age_80:
-    #  time_stamps: [10, 20, 30]
-    #cases_by_age_100:
-    #  time_stamps: [10, 20, 30]
     cases_per_timestep:
       time_stamps: [-1]
-      error: 0.002
+      error: 0.00001
 

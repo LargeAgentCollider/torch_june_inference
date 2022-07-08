@@ -8,9 +8,8 @@ from pathlib import Path
 import pyro.distributions as dist
 
 from torch_june import Runner
-from torch_june_inference.utils import set_attribute, get_attribute
+from torch_june_inference.utils import get_attribute
 from torch_june_inference.utils import read_device
-
 
 
 class InferenceEngine(ABC):
@@ -107,12 +106,15 @@ class InferenceEngine(ABC):
     #    return emulator
 
     def _set_initial_parameters(self):
-        names_to_save = []
-        for param in self.priors:
-            set_attribute(
-                self.runner.model, param, torch.nn.Parameter(torch.tensor(0.0))
-            )
-            names_to_save.append(param)
+        with torch.no_grad():
+            names_to_save = []
+            for param_name, param in self.runner.model.state_dict().items():
+                if param_name in self.priors:
+                    prior_value = self.priors[param_name].loc
+                    param.copy_(prior_value)
+                    names_to_save.append(param_name)
+                else:
+                    param.requires_grad = False
         return names_to_save
 
     def evaluate_emulator(self, samples):

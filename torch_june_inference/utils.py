@@ -30,5 +30,12 @@ def set_attribute(base, path, target):
     paths = path.split(".")
     _base = base
     for p in paths[:-1]:
+        #try:
+        #    p = int(p)
+        #except:
+        #    pass
+        #if type(p) == int:
+        #    _base = _base[p]
+        #else:
         _base = getattr(_base, p)
     setattr(_base, paths[-1], target)
