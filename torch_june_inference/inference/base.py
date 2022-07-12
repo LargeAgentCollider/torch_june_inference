@@ -121,10 +121,11 @@ class InferenceEngine(ABC):
         return mean, std
 
     def evaluate_model(self, samples):
+        runner = Runner.from_parameters(self.runner.parameters)
         with torch.no_grad():
             for param_name in samples:
-                set_attribute(self.runner.model, param_name, samples[param_name])
-        results = self.runner()
+                set_attribute(runner.model, param_name, samples[param_name])
+        results = runner()
         return (
             results,
             0.0,

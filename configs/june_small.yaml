@@ -6,7 +6,8 @@ system:
 
     #data_path: '@torch_june/test/data/data.pkl'
     #data_path: '../torch_june/worlds/data_small.pkl'
-data_path: '/cosma7/data/dp004/dc-quer1/data_london.pkl'
+    #data_path: '/cosma7/data/dp004/dc-quer1/data_london.pkl'
+data_path: '../torch_june/worlds/data_london.pkl'
 
 save_path: ./results/june
 

@@ -7,5 +7,5 @@ try:
 except ModuleNotFoundError:
     logger.warning("Failed to import MultiNest, not installed?")
 from .ultranest import UltraNest
-from .pyro import Pyro
+from .mcmc import MCMC
 from .svi import SVI
