@@ -2,32 +2,32 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://arnauqb.github.io/torch_june_inference/</loc>
-         <lastmod>2022-07-08</lastmod>
+         <lastmod>2022-07-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://arnauqb.github.io/torch_june_inference/emulation/gaussian_process/</loc>
-         <lastmod>2022-07-08</lastmod>
+         <lastmod>2022-07-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://arnauqb.github.io/torch_june_inference/inference/gradient_descent/</loc>
-         <lastmod>2022-07-08</lastmod>
+         <lastmod>2022-07-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://arnauqb.github.io/torch_june_inference/inference/hmc/</loc>
-         <lastmod>2022-07-08</lastmod>
+         <lastmod>2022-07-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://arnauqb.github.io/torch_june_inference/inference/multinest/</loc>
-         <lastmod>2022-07-08</lastmod>
+         <lastmod>2022-07-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://arnauqb.github.io/torch_june_inference/inference/svi/</loc>
-         <lastmod>2022-07-08</lastmod>
+         <lastmod>2022-07-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
