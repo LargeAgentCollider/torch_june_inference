@@ -8,7 +8,7 @@ import pandas as pd
 from scipy import stats
 
 from torch_june import TorchJune
-from torch_june_inference.utils import read_fortran_data_file
+from torch_june_inference.utils import read_fortran_data_file, set_attribute
 from torch_june_inference.inference.base import InferenceEngine
 from torch_june_inference.paths import config_path
 
@@ -31,6 +31,16 @@ class MultiNest(InferenceEngine):
             ret[key] = read_pyro_to_scipy(**parameters_to_fit[key]["prior"])
         return ret
 
+    def _set_initial_parameters(self):
+        with torch.no_grad():
+            names_to_save = []
+            for param_name in self.priors:
+                set_attribute(
+                    self.runner.model, param_name, self.priors[param_name].mean()
+                )
+                names_to_save.append(param_name)
+        return names_to_save
+
     def _prior(self, cube):
         """
         TODO: Need to invert from unit cube for other distros.
@@ -46,7 +56,7 @@ class MultiNest(InferenceEngine):
             torch.distributions, self.inference_configuration["likelihood"]
         )
         with torch.no_grad():
-            #self.runner.reset_model()
+            # self.runner.reset_model()
             samples = {}
             for i, key in enumerate(self.priors):
                 samples[key] = torch.tensor(cube[i], device=self.device)
@@ -63,14 +73,9 @@ class MultiNest(InferenceEngine):
                 data_obs = self.observed_data[key][time_stamps]
                 data_sq = torch.pow(data, 2.0)
                 error = rel_error * torch.sqrt(torch.cumsum(data_sq, dim=0))
-                #error = torch.clamp(rel_error * data, min=1e-3)
-                ret += (
-                    likelihood_fn(data, error)
-                    .log_prob(data_obs)
-                    .sum()
-                    .cpu()
-                    .item()
-                )
+                # error = torch.clamp(rel_error * data, min=1e-3)
+                l_ = likelihood_fn(data, error).log_prob(data_obs)
+                ret += l_.sum().cpu().item()
             return ret
 
     def run(self, **kwargs):

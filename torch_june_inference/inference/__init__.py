@@ -4,7 +4,7 @@ from .base import InferenceEngine
 from .gradient_descent import GradientDescent
 try:
     from .multinest import MultiNest
-except:
+except ModuleNotFoundError:
     logger.warning("Failed to import MultiNest, not installed?")
 from .ultranest import UltraNest
 from .pyro import Pyro
