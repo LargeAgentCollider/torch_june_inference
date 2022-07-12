@@ -1,0 +1,36 @@
+title: Pyro example configuration file.
+
+device: "cpu"
+june_configuration_file: "./configs/june_small.yaml"
+
+results_path: "./results"
+
+inference_configuration:
+  kernel: 
+    type: NUTS
+    max_tree_depth: 6
+  num_samples: 5000
+  warmup_steps: 100
+  likelihood: Normal
+
+parameters_to_fit:
+  infection_networks.networks.company.log_beta:
+    prior:
+      dist: Normal
+      loc: 1.3
+      scale: 0.2
+
+emulator:
+  use_emulator: false
+    #emulator_config_path: "./configs/emulator.yaml"
+  emulator_path: "./data/emulator.pkl"
+
+data:
+  observable: 
+    cases_per_timestep:
+      time_stamps: [-1]
+      error: 0.002
+    
+  observed_data: "./june_example/results.csv"
+
+
