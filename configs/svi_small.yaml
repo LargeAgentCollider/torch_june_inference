@@ -8,27 +8,21 @@ results_path: "./results"
 inference_configuration:
   optimizer:
     type: Adam
-    lr: 0.001
+    lr: 0.005
       #betas: [0.95, 0.999]
     milestones: [5000, 10000, 15000]
     gamma: 0.1
   n_steps: 100000
   loss:
     type: Trace_ELBO 
-    num_particles: 10
+    num_particles: 1
 
 parameters_to_fit:
   infection_networks.networks.household.log_beta:
     prior:
       dist: Normal
-      loc: 0.5
+      loc: 1.5
       scale: 0.2
-
-        #policies.interaction_policies.policies.0.beta_factors.household:
-        # prior:
-        #    dist: Normal
-        #    loc: 0.8
-        #    scale: 0.2
 
 emulator:
   use_emulator: false 

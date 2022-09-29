@@ -46,15 +46,6 @@ class SVI(InferenceEngine):
             gamma = 1.0
         optimizer_class = getattr(pyro.optim, optimizer_type)
         return optimizer_class(config)
-        # scheduler = pyro.optim.MultiStepLR(
-        #    {
-        #        "optimizer": optimizer_class,
-        #        "optim_args": config,
-        #        "milestones": milestones,
-        #        "gamma": gamma,
-        #    }
-        # )
-        # return scheduler
 
     def _get_loss(self):
         config = self.inference_configuration["loss"]
@@ -67,42 +58,51 @@ class SVI(InferenceEngine):
         for prior, value in self.priors.items():
             beta_name = prior.split(".")[-2]
             beta = pyro.sample(f"log_beta_{beta_name}", value)
-            #beta_prior = pyro.nn.PyroSample(value)
             set_attribute(runner.model, prior, beta)
         y = runner()
+        n_agents = runner.data["agent"].id.shape[0]
         for key in self.data_observable:
             time_stamps = self.data_observable[key]["time_stamps"]
             if time_stamps == "all":
                 time_stamps = range(len(y[key]))
-            data = y[key][time_stamps]
-            data_obs = y_obs[key][time_stamps]
-            rel_error = self.data_observable[key]["error"]
-            data_sq = torch.pow(data, 2.0)
-            error = rel_error * torch.sqrt(torch.cumsum(data_sq, dim=0))
+            # data = y[key][time_stamps]
+            data_obs = torch.round(y_obs[key][time_stamps] * n_agents)
+            infected_probs = torch.cumsum(
+                runner.data["agent"].infected_probs[time_stamps].sum(dim=1), 0
+            )
+            # rel_error = self.data_observable[key]["error"]
+            # data_sq = torch.pow(data, 2.0)
+            # error = rel_error * torch.sqrt(torch.cumsum(data_sq, dim=0))
             for i in pyro.plate(f"plate_obs_{key}", len(time_stamps)):
-                if data[i] == 0:
+                if infected_probs[i] == 0:
                     continue
-                #    #error = rel_error * data[i]
                 pyro.sample(
-                    f"obs_{key}_{i}",
-                    pyro.distributions.Normal(data[i], error[i]),
-                    # pyro.distributions.Delta(data[i]),
+                    f"cases_{i}",
+                    pyro.distributions.Poisson(infected_probs[i]),
                     obs=data_obs[i],
                 )
+            #    if data[i] == 0:
+            #        continue
+            #    pyro.sample(
+            #        f"obs_{key}_{i}",
+            #        pyro.distributions.Normal(data[i], error[i]),
+            #        obs=data_obs[i],
+            #    )
 
     def guide(self, data):
         runner = self.runner.from_parameters(self.runner.parameters)
         for prior, value in self.priors.items():
             beta_name = prior.split(".")[-2]
-            beta_mu_param = pyro.param(f"beta_mu_{beta_name}", value.loc)
-            beta_sigma_param = pyro.param(
-                f"beta_sigma_{beta_name}",
-                torch.tensor(0.1),
-                constraint=pyro.distributions.constraints.softplus_positive,
-            )
-            beta_prior = pyro.distributions.Normal(
-                loc=beta_mu_param, scale=beta_sigma_param
-            )
+            beta_mu_param = pyro.param(f"beta_mu_{beta_name}", value.sample())
+            # beta_sigma_param = pyro.param(
+            #    f"beta_sigma_{beta_name}",
+            #    torch.tensor(0.1),
+            #    constraint=pyro.distributions.constraints.softplus_positive,
+            # )
+            # beta_prior = pyro.distributions.Normal(
+            #    loc=beta_mu_param, scale=beta_sigma_param
+            # )
+            beta_prior = pyro.distributions.Delta(beta_mu_param)
             beta = pyro.sample(f"log_beta_{beta_name}", beta_prior)
             set_attribute(runner.model, prior, beta)
         y = runner()
