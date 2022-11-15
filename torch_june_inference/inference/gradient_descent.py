@@ -58,9 +58,6 @@ class GradientDescent(InferenceEngine):
                 loss = loss + loss_fn(data, data_obs)
             loss.backward()
             torch.nn.utils.clip_grad_value_(self.runner.model.parameters(), 1e-2)
-            print("---")
-            print(self.runner.model.infection_networks.networks.household.log_beta.grad)
-            print(self.runner.model.infection_networks.networks.school.log_beta.grad)
             optimizer.step()
             running_loss = loss.item()
             if verbose:

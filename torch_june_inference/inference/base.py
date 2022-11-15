@@ -95,15 +95,12 @@ class InferenceEngine(ABC):
         with torch.no_grad():
             names_to_save = []
             for param_name in self.priors:
-                set_attribute(self.runner.model, param_name, self.priors[param_name].loc)
+                set_attribute(
+                    self.runner.model,
+                    param_name,
+                    torch.nn.Parameter(self.priors[param_name].loc),
+                )
                 names_to_save.append(param_name)
-            #for param_name, param in self.runner.model.state_dict().items():
-            #    if param_name in self.priors:
-            #        prior_value = self.priors[param_name].loc
-            #        param.copy_(prior_value)
-            #        names_to_save.append(param_name)
-            #    else:
-            #        param.requires_grad = False
         return names_to_save
 
     def evaluate_emulator(self, samples):

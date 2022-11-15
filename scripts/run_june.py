@@ -4,7 +4,7 @@ import sys
 
 with torch.no_grad():
     runner = Runner.from_file(sys.argv[1])
-    results = runner()
+    results, is_infected = runner()
 
 n_agents = runner.data["agent"].id.shape[0]
 print(f"n agents {n_agents}")
@@ -21,5 +21,6 @@ print(f"n agents {n_agents}")
 #results["cases_per_timestep"] = torch.cumsum(daily_cases, dim=0) / n_agents
 #print(results["daily_cases_per_timestep"])
 print(results["cases_per_timestep"])
+print(results["daily_deaths_by_district"])
 
-runner.save_results(results)
+runner.save_results(results, is_infected)
